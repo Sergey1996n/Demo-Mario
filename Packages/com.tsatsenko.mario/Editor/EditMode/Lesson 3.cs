@@ -13,6 +13,8 @@ using UnityEngine.Tilemaps;
 /* Перенести тесты Tilemap */
 public class Lesson3
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "SampleScene.unity");
+
     [Test]
     public void __ExistingDirectoriesAndFiles()
     {
@@ -188,34 +190,7 @@ public class Lesson3
         Assert.AreEqual(gameObjectPlayer.GetComponent<Rigidbody2D>(), fieldRigidbody2D,
             "The \"{0}\" method does not work correctly in the \"{1}\" class (there is no reference to the component in the \"{2}\" field)", new object[] { methodAwake.Name, scriptPlayer.name, "rigidbody2d" });
 
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
-
+        EditorSceneManager.OpenScene(pathScene);
     }
-
-    //[Test]
-    //public void ___InitializingVariablesScriptPlayer()
-    //{
-    //    EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
-    //    GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
-    //    Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
-
-    //    Debug.Log(TestAssistant.GetValueField(typeof(Player), "rigidbody2d", scriptPlayer));
-    //    var methodAwake = TestAssistant.GetMethod(typeof(Player), "Awake");
-    //    methodAwake.Invoke(scriptPlayer, null);
-    //    Debug.Log(TestAssistant.GetValueField(typeof(Player), "rigidbody2d", scriptPlayer));
-    //}
-
-    //[Test]
-    //public void ____InitializingVariablesScriptPlayer()
-    //{
-    //    EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
-    //    GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
-    //    Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
-
-    //    Debug.Log(TestAssistant.GetValueField(typeof(Player), "rigidbody2d", scriptPlayer));
-    //    var methodAwake = TestAssistant.GetMethod(typeof(Player), "Awake");
-    //    methodAwake.Invoke(scriptPlayer, null);
-    //    Debug.Log(TestAssistant.GetValueField(typeof(Player), "rigidbody2d", scriptPlayer));
-    //}
 }
 
