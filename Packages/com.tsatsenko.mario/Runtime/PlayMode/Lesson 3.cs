@@ -10,23 +10,6 @@ using System;
 
 public class Lesson3
 {
-    /* Перенести в TestAssistent */
-    private IEnumerator WaitUntilForSeconds(Func<bool> checker, float maxTime, string message, params object[] args)
-    {
-        float timer = 0;
-        while (timer < maxTime)
-        {
-            bool check = checker.Invoke();
-            if (check)
-            {
-                yield break;
-            }
-            yield return null;
-            timer += Time.deltaTime;
-        }
-        
-        Assert.Fail(message, args);
-    }
     [UnitySetUp]
     public IEnumerator Setup()
     {
@@ -45,10 +28,8 @@ public class Lesson3
 
         if (!fieldIsGrounded)
         {
-            yield return WaitUntilForSeconds(() => (bool)TestAssistant.GetValueField(typeof(Player), "isGrounded", scriptPlayer), 10,
+            yield return TestAssistant.WaitUntilForSeconds(() => (bool)TestAssistant.GetValueField(typeof(Player), "isGrounded", scriptPlayer), 10,
                 "In the \"{0}\" script, the \"{1}\" method works incorrectly", new object[] { "Player", "OnCollisionEnter2D" });
-            //yield return new WaitUntilForSeconds(), 10, "CheckingJumpPlayer");
-            //yield return new WaitUntil(() => (bool)TestAssistant.GetValueField(typeof(Player), "isGrounded", scriptPlayer)/* || MaxTime(10)*/);
         }
 
         var position = gameObjectPlayer.transform.position;

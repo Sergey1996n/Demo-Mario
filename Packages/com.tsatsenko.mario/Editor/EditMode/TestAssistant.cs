@@ -204,6 +204,23 @@ public class TestAssistant
             index++;
         }
     }
+
+    public static IEnumerator WaitUntilForSeconds(Func<bool> checker, float maxTime, string message, params object[] args)
+    {
+        float timer = 0;
+        while (timer < maxTime)
+        {
+            bool check = checker.Invoke();
+            if (check)
+            {
+                yield break;
+            }
+            yield return null;
+            timer += Time.deltaTime;
+        }
+
+        Assert.Fail(message, args);
+    }
 }
 
 public class MyParameterInfo : ParameterInfo
