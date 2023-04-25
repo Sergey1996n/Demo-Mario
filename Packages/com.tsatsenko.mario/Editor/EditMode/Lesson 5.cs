@@ -6,234 +6,313 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 public class Lesson5
 {
     [Test]
-    public void ExistsDirectoryPrefabs()
+    public void __ExistingDirectoriesAndFiles()
     {
         var pathDirectory = Path.Combine("Assets", "Prefabs");
         var exists = Directory.Exists(pathDirectory);
         Assert.IsTrue(exists,
-            "The \"Prefabs\" directory is missing!");
+            "The \"{0}\" directory does not have the \"{1}\" directory", new object[] { "Assets", "Prefabs" });
+
+        var pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
+        exists = File.Exists(pathFile);
+        Assert.IsTrue(exists,
+            "The \"{0}\" directory does not have the \"{1}\" prefab", new object[] { "Prefabs", "Coin" });
+    }
+    [Test]
+    public void __ExistingObjectsOnScene()
+    {
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        Assert.IsNotNull(gameObjectPlayer,
+            "There is no \"{0}\" object on the scene", new object[] { "Player" });
+
+        if (!gameObjectPlayer.TryGetComponent(out Player player))
+        {
+            Assert.AreEqual(gameObjectPlayer.AddComponent<Player>(), player,
+                "The \"{0}\" object does not have a \"{1}\" script", new object[] { gameObjectPlayer.name, "Player" });
+        }
     }
 
     [Test]
-    public void ExistsFileCoinInPrefabs()
+    public void _1CheckingPrefabCoin()
     {
-        var pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
-        var exists = File.Exists(pathFile);
-        Assert.IsTrue(exists,
-            "There is no prefab \"Coin\" in the directory \"Prefabs\"!");
-
+        string pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
         GameObject coinObject = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
+
+        /***************************Transform*************************/
+
+        string nameComponent = "Transform";
+
+        if (!coinObject.TryGetComponent(out Transform transform))
+        {
+            Assert.AreEqual(coinObject.AddComponent<Transform>(), transform,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { coinObject.name, nameComponent });
+        }
+
+        Assert.AreEqual(Vector3.zero, transform.position,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Position" });
+
+        Assert.AreEqual(Vector3.zero, transform.rotation.eulerAngles,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Rotation" });
+
+        Assert.AreEqual(Vector3.one, transform.localScale,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Scale" });
 
         /***********************Sprite Renderer*********************/
 
-        SpriteRenderer spriteRenderer = coinObject.GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
+        nameComponent = "Sprite Renderer";
+
+        if (!coinObject.TryGetComponent(out SpriteRenderer spriteRenderer))
         {
             Assert.AreEqual(coinObject.AddComponent<SpriteRenderer>(), spriteRenderer,
-                "The \"Coin\" object does not have a Sprite Renderer component");
+                "The \"{0}\" prefab does not have a \"{1}\" component", new object[] { coinObject.name, nameComponent });
         }
 
-        Assert.AreEqual("Tileset_48", spriteRenderer.sprite.name,
-            "The \"Coin\" object in the \"Sprite Renderer\" component has an incorrect \"Sprite\" field");
+        pathFile = Path.Combine("Assets", "Sprites", "Tileset.png");
+        UnityEngine.Object[] spritesTileset = AssetDatabase.LoadAllAssetRepresentationsAtPath(pathFile);
+
+        Assert.AreEqual(spritesTileset[48], spriteRenderer.sprite,
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Sprite" });
 
         /***********************Box Collider*********************/
 
-        BoxCollider2D boxCollider2D = coinObject.GetComponent<BoxCollider2D>();
-        if (boxCollider2D == null)
+        nameComponent = "Box Collider 2D";
+
+        if (!coinObject.TryGetComponent(out BoxCollider2D boxCollider2D))
         {
             Assert.AreEqual(coinObject.AddComponent<BoxCollider2D>(), boxCollider2D,
-                "The \"Coin\" object does not have a BoxCollider2D component");
+                "The \"{0}\" prefab does not have a \"{1}\" component", new object[] { coinObject.name, nameComponent });
         }
 
         Assert.IsTrue(boxCollider2D.isTrigger,
-            "The \"Coin\" object in the \"Box Collider 2D\" component has an incorrect \"Size\" field");
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Is Trigger" });
 
         Assert.AreEqual(new Vector2(0.625f, 0.878f), boxCollider2D.size,
-            "The \"Coin\" object in the \"Box Collider 2D\" component has an incorrect \"Size\" field");
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Size" });
+
+        /***************************Coin*************************/
+
+        nameComponent = "Coin";
+
+        if (!coinObject.TryGetComponent(out Coin coin))
+        {
+            Assert.AreEqual(coinObject.AddComponent<Player>(), coin,
+                "The \"{0}\" prefab does not have a \"{1}\" script", new object[] { coinObject.name, nameComponent });
+        }
     }
 
     [Test]
-    public void CheckingScriptPlayer()
+    public void _2CheckingObjectCoinInScene()
     {
-        var nameScript = "Player";
-        var pathFile = Path.Combine("Assets", "Scripts", nameScript + ".cs");
-        var exists = File.Exists(pathFile);
-        Assert.IsTrue(exists,
-            $"The \"{nameScript}\" script is missing!");
+        GameObject gameObjectCoin = GameObject.Find("Coin");
+        Assert.IsNotNull(gameObjectCoin,
+            "There is no \"{0}\" object on the scene", new object[] { "Coin" });
 
-        TestAssistant.TestingFields(typeof(Player), "scoreText", "Text", FieldAttributes.Private, true);
+        /***********************Sprite Renderer*********************/
 
-        TestAssistant.TestingMethods(typeof(Player), "AddCoin", "Void", MethodAttributes.Public | MethodAttributes.HideBySig, new MyParameterInfo[] { new MyParameterInfo(typeof(int), "count")});
-    }
+        string nameComponent = "Sprite Renderer";
 
-    public void CheckingObjectPlayerValueSciptPlayer()
-    {
-        var player = GameObject.FindGameObjectWithTag("Player");
-        var p = player.GetComponent<Player>();
-        if (p == null)
+        if (!gameObjectCoin.TryGetComponent(out SpriteRenderer spriteRenderer))
         {
-            Assert.AreEqual(player.AddComponent<Player>(), p,
-                "The \"Player\" object does not have a Player script");
+            Assert.AreEqual(gameObjectCoin.AddComponent<SpriteRenderer>(), spriteRenderer,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectCoin.name, nameComponent });
         }
 
-        TestAssistant.TestingFieldValue(typeof(Player), "scoreText", p, GameObject.Find("Score"));
+        var pathFile = Path.Combine("Assets", "Sprites", "Tileset.png");
+        UnityEngine.Object[] spritesTileset = AssetDatabase.LoadAllAssetRepresentationsAtPath(pathFile);
+
+        Assert.AreEqual(spritesTileset[48], spriteRenderer.sprite,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCoin.name, nameComponent, "Sprite" });
+
+        /***********************Box Collider*********************/
+
+        nameComponent = "Box Collider 2D";
+
+        if (!gameObjectCoin.TryGetComponent(out BoxCollider2D boxCollider2D))
+        {
+            Assert.AreEqual(gameObjectCoin.AddComponent<BoxCollider2D>(), boxCollider2D,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectCoin.name, nameComponent });
+        }
+
+        Assert.IsTrue(boxCollider2D.isTrigger,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCoin.name, nameComponent, "Is Trigger" });
+
+        Assert.AreEqual(new Vector2(0.625f, 0.878f), boxCollider2D.size,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCoin.name, nameComponent, "Size" });
+
+        /***************************Coin*************************/
+
+        nameComponent = "Coin";
+
+        if (!gameObjectCoin.TryGetComponent(out Coin coin))
+        {
+            Assert.AreEqual(gameObjectCoin.AddComponent<Player>(), coin,
+                "The \"{0}\" object does not have a \"{1}\" script", new object[] { gameObjectCoin.name, nameComponent });
+        }
     }
 
     [Test]
-    public void ExistsCanvasOnScene()
+    public void _3CheckingScriptCoin()
     {
-        var canvasObject = GameObject.Find("Canvas");
+        Type type = typeof(Coin);
+        TestAssistant.TestingField(type, "count", typeof(int), FieldAttributes.Private, true);
+
+        TestAssistant.TestingMethod(type, "OnTriggerEnter2D", typeof(void), MethodAttributes.Private, new MyParameterInfo[] { new MyParameterInfo(typeof(Collider2D), "collision") });
+
+        GameObject gameObjectCoin = GameObject.Find("Coin");
+        Coin scriptCoin = gameObjectCoin.GetComponent<Coin>();
+
+        TestAssistant.TestingFieldValue(type, "count", scriptCoin, 10);
+    }
+
+    [Test]
+    public void _4CheckingObjectCanvasOnScene()
+    {
+        GameObject gameObjectCanvas = GameObject.Find("Canvas");
+        Assert.IsNotNull(gameObjectCanvas,
+            "There is no \"{0}\" object on the scene", new object[] { "Canvas" });
 
         /***************************Canvas*************************/
 
-        var canvas = canvasObject.GetComponent<Canvas>();
-        if (canvas == null)
+        string nameComponent = "Canvas";
+
+        if (!gameObjectCanvas.TryGetComponent(out Canvas canvas))
         {
-            Assert.AreEqual(canvasObject.AddComponent<Canvas>(), canvas,
-                "The \"Canvas\" object does not have a \"Canvas\" component");
+            Assert.AreEqual(gameObjectCanvas.AddComponent<Canvas>(), canvas,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectCanvas.name, nameComponent });
         }
 
         Assert.AreEqual(RenderMode.ScreenSpaceCamera, canvas.renderMode,
-            "The \"Canvas\" object in the \"Canvas\" component has an incorrect \"Render Mode\" field");
-        
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCanvas.name, nameComponent, "Render Mode" });
+
         Assert.AreEqual(Camera.main, canvas.worldCamera,
-            "The \"Canvas\" object in the \"Canvas\" component has an incorrect \"Render Camera\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCanvas.name, nameComponent, "Render Camera" });
 
         /***************************CanvasScaler*************************/
 
-        var canvasScaler = canvasObject.GetComponent<CanvasScaler>();
-        if (canvasScaler == null)
+        nameComponent = "Canvas Scaler";
+
+        if (!gameObjectCanvas.TryGetComponent(out CanvasScaler canvasScaler))
         {
-            Assert.AreEqual(canvasObject.AddComponent<CanvasScaler>(), canvasScaler,
-                "The \"Canvas\" object does not have a \"CanvasScaler\" component");
+            Assert.AreEqual(gameObjectCanvas.AddComponent<CanvasScaler>(), canvasScaler,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectCanvas.name, nameComponent });
         }
 
         Assert.AreEqual(CanvasScaler.ScaleMode.ScaleWithScreenSize, canvasScaler.uiScaleMode,
-            "The \"Canvas\" object in the \"Canvas Scaler\" component has an incorrect \"Reference Resolution\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCanvas.name, nameComponent, "UI Scale Mode" });
 
         Assert.AreEqual(new Vector2(1366, 768), canvasScaler.referenceResolution,
-            "The \"Canvas\" object in the \"Canvas Scaler\" component has an incorrect \"Reference Resolution\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCanvas.name, nameComponent, "Reference Resolution" });
 
         Assert.AreEqual(0.5f, canvasScaler.matchWidthOrHeight,
-            "The \"Canvas\" object in the \"Canvas Scaler\" component has an incorrect \"Match\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCanvas.name, nameComponent, "Match" });
 
         /***************************GraphicRaycaster*************************/
 
-        var graphicRaycaster = canvasObject.GetComponent<GraphicRaycaster>();
-        if (graphicRaycaster == null)
+        nameComponent = "Graphic Raycaster";
+
+        if (!gameObjectCanvas.TryGetComponent(out GraphicRaycaster graphicRaycaster))
         {
-            Assert.AreEqual(canvasObject.AddComponent<GraphicRaycaster>(), graphicRaycaster,
-                "The \"Canvas\" object does not have a \"Graphic Raycaster\" component");
+            Assert.AreEqual(gameObjectCanvas.AddComponent<GraphicRaycaster>(), graphicRaycaster,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectCanvas.name, nameComponent });
         }
     }
 
     [Test]
-    public void ExistsTextOnScene()
+    public void _5ExistsTextOnScene()
     {
-        var scoreObject = GameObject.Find("Score");
+        GameObject gameObjectScore = GameObject.Find("Score");
 
-        Assert.IsNotNull(scoreObject,
-            "There is no \"Score\" object on the scene");
+        Assert.IsNotNull(gameObjectScore,
+            "There is no \"{0}\" object on the scene", new object[] { "Score" });
 
         /***************************RectTransform*************************/
 
-        var rectTransform = scoreObject.GetComponent<RectTransform>();
+        string nameComponent = "Rect Transform";
+
+        if (!gameObjectScore.TryGetComponent(out RectTransform rectTransform))
+        {
+            Assert.AreEqual(gameObjectScore.AddComponent<RectTransform>(), rectTransform,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectScore.name, nameComponent });
+        }
 
         Assert.AreEqual(0, rectTransform.anchorMin.x,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Anchors Min X\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Anchors Min X" });
 
         Assert.AreEqual(1, rectTransform.anchorMin.y,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Anchors Min Y\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Anchors Min Y" });
 
         Assert.AreEqual(0, rectTransform.anchorMax.x,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Anchors Max X\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Anchors Max X" });
 
         Assert.AreEqual(1, rectTransform.anchorMax.y,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Anchors Max Y\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Anchors Max Y" });
 
         Assert.AreEqual(0, rectTransform.pivot.x,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Pivot X\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Pivot X" });
 
         Assert.AreEqual(1, rectTransform.pivot.y,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Pivot Y\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Pivot Y" });
 
         Assert.AreEqual(16, rectTransform.anchoredPosition.x,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Pos X\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Pos X" });
 
         Assert.AreEqual(-16, rectTransform.anchoredPosition.y,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Pos Y\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Pos Y" });
 
         Assert.AreEqual(120, rectTransform.sizeDelta.x,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Width\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Width" });
 
         Assert.AreEqual(40, rectTransform.sizeDelta.y,
-            "The \"Score\" object in the \"Rect Transform\" component has an incorrect \"Height\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Height" });
 
         /***************************CanvasRenderer*************************/
 
-        if (!scoreObject.TryGetComponent<CanvasRenderer>(out var canvasRenderer))
+        nameComponent = "Canvas Renderer";
+
+        if (!gameObjectScore.TryGetComponent<CanvasRenderer>(out var canvasRenderer))
         {
-            Assert.AreEqual(scoreObject.AddComponent<CanvasRenderer>(), canvasRenderer,
-                "The \"Score\" object does not have a \"Canvas Renderer\" component");
+            Assert.AreEqual(gameObjectScore.AddComponent<CanvasRenderer>(), canvasRenderer,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectScore.name, nameComponent });
         }
 
         /***************************Text*************************/
 
-        if (!scoreObject.TryGetComponent<Text>(out var text))
+        nameComponent = "Text";
+
+        if (!gameObjectScore.TryGetComponent<Text>(out var text))
         {
-            Assert.AreEqual(scoreObject.AddComponent<Text>(), text,
-                "The \"Score\" object does not have a \"Canvas Renderer\" component");
+            Assert.AreEqual(gameObjectScore.AddComponent<Text>(), text,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectScore.name, nameComponent });
         }
 
         Assert.AreEqual("0", text.text,
-            "The \"Score\" object in the \"Text\" component has an incorrect \"Text\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Text" });
 
         Assert.AreEqual(35, text.fontSize,
-            "The \"Score\" object in the \"Text\" component has an incorrect \"Font Size\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Font Size" });
 
         Assert.AreEqual(Color.white, text.color,
-            "The \"Score\" object in the \"Text\" component has an incorrect \"Color\" field");
-
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectScore.name, nameComponent, "Color" });
     }
 
     [Test]
-    public void CheckingScriptCoin()
+    public void _6CheckingScriptPlayer()
     {
-        var nameScript = "Coin";
-        var pathFile = Path.Combine("Assets", "Scripts", nameScript + ".cs");
-        var exists = File.Exists(pathFile);
-        Assert.IsTrue(exists,
-            $"The \"{nameScript}\" script is missing!");
+        Type type = typeof(Player);
+        TestAssistant.TestingField(type, "scoreText", typeof(Text), FieldAttributes.Private, true);
 
-        TestAssistant.TestingFields(typeof(Coin), "count", "Int32", FieldAttributes.Private, true);
+        TestAssistant.TestingMethod(type, "AddCoin", typeof(void), MethodAttributes.Public, new MyParameterInfo[] { new MyParameterInfo(typeof(int), "count") });
 
-        TestAssistant.TestingMethods(typeof(Coin), "OnTriggerEnter2D", "Void", MethodAttributes.Private | MethodAttributes.HideBySig, new MyParameterInfo[] { new MyParameterInfo(typeof(Collider2D), "collision") });
-    }
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
+        GameObject gameObjectScore = GameObject.Find("Score");
+        Text textScore = gameObjectScore.GetComponent<Text>();
 
-    [Test]
-    public void ExistsComponentCoinInObjectCoin()
-    {
-        var pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
-        var exists = File.Exists(pathFile);
-        Assert.IsTrue(exists,
-            "There is no prefab \"Coin\" in the directory \"Prefabs\"!");
-
-        GameObject coinObject = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
-
-        /*************************Coin***********************/
-
-        if (!coinObject.TryGetComponent<Coin>(out Coin coin))
-        {
-            Assert.AreEqual(coinObject.AddComponent<Coin>(), coin,
-                "The \"Coin\" object does not have a Coin component");
-        }
-
-        TestAssistant.TestingFieldValue(typeof(Coin), "count", coin, 10);
+        TestAssistant.TestingFieldValue(typeof(Player), "scoreText", scriptPlayer, textScore);
     }
 }
