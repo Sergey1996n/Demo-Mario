@@ -1,123 +1,213 @@
-using System.CodeDom;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 public class Lesson6
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
+
     [Test]
-    public void ExistDirectoresAndFiles()
+    public void __ExistingDirectoriesAndFiles()
     {
         var pathDirectory = Path.Combine("Assets", "Audio");
         var exists = Directory.Exists(pathDirectory);
         Assert.IsTrue(exists,
-            "The \"Audio\" directory is missing!");
+            "The \"{0}\" directory does not have the \"{1}\" directory", new object[] { "Assets", "Audio" });
 
         pathDirectory = Path.Combine("Assets", "Audio", "Sounds");
         exists = Directory.Exists(pathDirectory);
         Assert.IsTrue(exists,
-            "The \"Sounds\" directory is missing!");
+            "The \"{0}\" directory does not have the \"{1}\" directory", new object[] { "Audio", "Sounds" });
 
-        pathDirectory = Path.Combine("Assets", "Audio", "Musics");
+        pathDirectory = Path.Combine("Assets", "Audio", "Music");
         exists = Directory.Exists(pathDirectory);
         Assert.IsTrue(exists,
-            "The \"Musics\" directory is missing!");
+            "The \"{0}\" directory does not have the \"{1}\" directory", new object[] { "Audio", "Music" });
 
         var pathfile = Path.Combine("Assets", "Audio", "Sounds", "Coin.mp3");
         exists = File.Exists(pathfile);
         Assert.IsTrue(exists,
-            "There is no sound \"Coin\" in the directory \"Sounds\"!");
+            "The \"{0}\" directory does not have the \"{1}\" sound", new object[] { "Sounds", "Coin" });
 
-        pathfile = Path.Combine("Assets", "Audio", "Musics", "MainMusic.mp3");
+        pathfile = Path.Combine("Assets", "Audio", "Music", "MainMusic.mp3");
         exists = File.Exists(pathfile);
         Assert.IsTrue(exists,
-            "There is no music \"MainMusic\" in the directory \"Musics\"!");
+            "The \"{0}\" directory does not have the \"{1}\" music", new object[] { "Music", "MainMusic" });
     }
 
     [Test]
-    public void ExistComponentsObjectPlayer()
+    public void __ExistingObjectsOnScene()
     {
-        var player = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        Assert.IsNotNull(gameObjectPlayer,
+            "There is no \"{0}\" object on the scene", new object[] { "Player" });
+
+        if (!gameObjectPlayer.TryGetComponent(out Player player))
+        {
+            Assert.AreEqual(gameObjectPlayer.AddComponent<Player>(), player,
+                "The \"{0}\" object does not have a \"{1}\" script", new object[] { gameObjectPlayer.name, "Player" });
+        }
+
+        GameObject gameObjectCoin = GameObject.Find("Coin");
+        Assert.IsNotNull(gameObjectCoin,
+            "There is no \"{0}\" object on the scene", new object[] { "Coin" });
+
+        if (!gameObjectCoin.TryGetComponent(out Coin coin))
+        {
+            Assert.AreEqual(gameObjectCoin.AddComponent<Coin>(), coin,
+                "The \"{0}\" object does not have a \"{1}\" script", new object[] { gameObjectCoin.name, "Coin" });
+        }
+    }
+
+    [Test]
+    public void _1CheckingObjectPlayerOnScene()
+    {
+        GameObject gameObjectPlayer = GameObject.Find("Player");
 
         /***************************AudioSource*************************/
 
-        if (!player.TryGetComponent(out AudioSource audioSource))
+        string nameComponent = "Audio Source";
+
+        if (!gameObjectPlayer.TryGetComponent(out AudioSource audioSource))
         {
-            Assert.AreEqual(player.AddComponent<AudioSource>(), audioSource,
-                "The \"Player\" object does not have a AudioSource component");
+            Assert.AreEqual(gameObjectPlayer.AddComponent<AudioSource>(), audioSource,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectPlayer.name, nameComponent });
         }
+
+        Assert.IsNull(audioSource.clip,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectPlayer.name, nameComponent, "Audio Clip" });
 
         Assert.IsFalse(audioSource.playOnAwake,
-            "The \"Player\" object in the \"AudioSource\" component has an incorrect \"Play On Awake\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectPlayer.name, nameComponent, "Play On Awake" });
 
         Assert.AreEqual(0, audioSource.minDistance,
-            "The \"Player\" object in the \"AudioSource\" component has an incorrect \"Min Distance\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectPlayer.name, nameComponent, "Min Distance" });
 
-        Assert.AreEqual(12, audioSource.maxDistance,
-            "The \"Player\" object in the \"AudioSource\" component has an incorrect \"Max Distance\" field");
+        Assert.AreEqual(20, audioSource.maxDistance,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectPlayer.name, nameComponent, "Max Distance" });
     }
 
     [Test]
-    public void CheckingScriptPlayer()
+    public void _2CheckingScriptCoin()
     {
-        var nameScript = "Coin";
-        var pathFile = Path.Combine("Assets", "Prefabs", nameScript + ".prefab");
-        var exists = File.Exists(pathFile);
-        Assert.IsTrue(exists,
-            $"The \"{nameScript}\" prefab is missing!");
+        Type type = typeof(Coin);
+        TestAssistant.TestingField(type, "audioClip", typeof(AudioClip), FieldAttributes.Private, true);
+        TestAssistant.TestingField(type, "audioSource", typeof(AudioSource), FieldAttributes.Private);
+        TestAssistant.TestingField(type, "player", typeof(GameObject), FieldAttributes.Private);
 
-        GameObject coinObject = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
-        var coin = coinObject.GetComponent<Coin>();
+        TestAssistant.TestingMethod(type, "Start", typeof(void), MethodAttributes.Private);
+        TestAssistant.TestingMethod(type, "OnTriggerEnter2D", typeof(void), MethodAttributes.Private, new MyParameterInfo[] { new MyParameterInfo(typeof(Collider2D), "collision") });
 
-        pathFile = Path.Combine("Assets", "Audio", "Sounds", "Coin.mp3");
+        GameObject gameObjectCoin = GameObject.Find("Coin");
+        Coin scriptCoin = gameObjectCoin.GetComponent<Coin>();
+
+        string pathFile = Path.Combine("Assets", "Audio", "Sounds", "Coin.mp3");
         AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(pathFile);
 
-
-        TestAssistant.TestingFields(typeof(Coin), "audioClip", "AudioClip", FieldAttributes.Private, true);
-        TestAssistant.TestingFieldValue(typeof(Coin), "audioClip", coin, audioClip);
-        TestAssistant.TestingFields(typeof(Coin), "audioSource", "AudioSource", FieldAttributes.Private);
-        TestAssistant.TestingFields(typeof(Coin), "player", "GameObject", FieldAttributes.Private);
+        TestAssistant.TestingFieldValue(typeof(Coin), "audioClip", scriptCoin, audioClip);
     }
 
     [Test]
-    public void ExistOnSceneObjectMusicInObjectMainCamera()
+    public void _3CheckingObjectMusicInObjectMainCamera()
     {
-        GameObject musicObject = GameObject.Find("Music");
-        Assert.IsNotNull(musicObject,
-            "The \"Music\" object does not exist on the scene");
+        GameObject gameObjectMusic = GameObject.Find("Music");
+        Assert.IsNotNull(gameObjectMusic,
+            "There is no \"{0}\" object on the scene", new object[] { "Music" });
 
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        Assert.AreEqual(playerObject, musicObject.transform.parent.gameObject,
-            "The \"Music\" object is not inside the \"Player\" object");
+        Assert.AreEqual(Camera.main.gameObject, gameObjectMusic.transform.parent.gameObject,
+            "The \"{0}\" object has the incorrect parent", new object[] { gameObjectMusic.name });
+
+        /***************************Transform*************************/
+
+        string nameComponent = "Transform";
+
+        if (!gameObjectMusic.TryGetComponent(out Transform transform))
+        {
+            Assert.AreEqual(gameObjectMusic.AddComponent<Transform>(), transform,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectMusic.name, nameComponent });
+        }
+
+        Assert.AreEqual(Vector3.zero, transform.position,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Position" });
 
         /***************************AudioSource*************************/
 
-        if (!musicObject.TryGetComponent(out AudioSource audioSource))
+        nameComponent = "Audio Source";
+
+        if (!gameObjectMusic.TryGetComponent(out AudioSource audioSource))
         {
-            Assert.AreEqual(musicObject.AddComponent<AudioSource>(), audioSource,
-                "The \"Coin\" object does not have a Coin component");
+            Assert.AreEqual(gameObjectMusic.AddComponent<AudioSource>(), audioSource,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectMusic.name, nameComponent });
         }
 
-        var pathFile = Path.Combine("Assets", "Audio", "Musics", "MainMusic.mp3");
+        var pathFile = Path.Combine("Assets", "Audio", "Music", "MainMusic.mp3");
         AudioClip audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(pathFile);
 
         Assert.AreEqual(audioClip, audioSource.clip,
-            "The \"Music\" object in the \"AudioSource\" component has an incorrect \"Audio Clip\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Audio Clip" });
 
         Assert.IsTrue(audioSource.playOnAwake,
-            "The \"Music\" object in the \"AudioSource\" component has an incorrect \"Play On Awake\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Play On Awake" });
 
         Assert.AreEqual(.2f, audioSource.volume,
-            "The \"Music\" object in the \"AudioSource\" component has an incorrect \"Volume\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Volume" });
 
         Assert.IsTrue(audioSource.loop,
-            "The \"Music\" object in the \"AudioSource\" component has an incorrect \"Loop\" field");
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Loop" });
 
+        Assert.AreEqual(0, audioSource.minDistance,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Min Distance" });
+
+        Assert.AreEqual(20, audioSource.maxDistance,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Max Distance" });
     }
 
+    [Test]
+    public void _4CheckingObjectMainCamera()
+    {
+        GameObject gameObjectMusic = Camera.main.gameObject;
+
+        /***************************Transform*************************/
+
+        string nameComponent = "Transform";
+
+        if (!gameObjectMusic.TryGetComponent(out Transform transform))
+        {
+            Assert.AreEqual(gameObjectMusic.AddComponent<Transform>(), transform,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectMusic.name, nameComponent });
+        }
+
+        Assert.AreEqual(Vector3.back * 10, transform.position,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Position" });
+    }
+
+    [Test]
+    public void _5InitializingVariablesScriptPlayer()
+    {
+        Type type = typeof(Coin);
+        GameObject gameObjectCoin = GameObject.Find("Coin");
+        Coin scriptCoin = gameObjectCoin.GetComponent<Coin>();
+
+        var methodStart = TestAssistant.GetMethod(type, "Start");
+        methodStart.Invoke(scriptCoin, null);
+
+        AudioSource fieldAudioSource = TestAssistant.GetValueField(type, "audioSource", scriptCoin) as AudioSource;
+        GameObject fieldPlayer = TestAssistant.GetValueField(type, "player", scriptCoin) as GameObject;
+
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+
+        Assert.AreEqual(gameObjectPlayer.GetComponent<AudioSource>(), fieldAudioSource,
+            "The \"{0}\" method does not work correctly in the \"{1}\" class (there is no reference to the component in the \"{2}\" field)", new object[] { methodStart.Name, scriptCoin.name, "audioSource" });
+
+        Assert.AreEqual(gameObjectPlayer, fieldPlayer,
+            "The \"{0}\" method does not work correctly in the \"{1}\" class (there is no reference to the component in the \"{2}\" field)", new object[] { methodStart.Name, scriptCoin.name, "player" });
+
+        EditorSceneManager.OpenScene(pathScene);
+    }
 }
