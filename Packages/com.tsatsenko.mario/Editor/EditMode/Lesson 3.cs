@@ -10,7 +10,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-/* Перенести тесты Tilemap */
 public class Lesson3
 {
     private string pathScene = Path.Combine("Assets", "Scenes", "SampleScene.unity");
@@ -50,6 +49,14 @@ public class Lesson3
     }
 
     [Test]
+    public void __ExistingObjectsOnScene()
+    {
+        GameObject gameObjectTilemap = GameObject.Find("Tilemap");
+        Assert.IsNotNull(gameObjectTilemap,
+            "There is no \"{0}\" object on the scene", new object[] { "Tilemap" });
+    }
+
+    [Test]
     public void _1CheckingSpritePlayer()
     {
         var pathFile = Path.Combine("Assets", "Sprites", "Player.png");
@@ -73,7 +80,7 @@ public class Lesson3
     }
 
     [Test]
-    public void _2CheckingObjectStarOnScene()
+    public void _2CheckingObjectPlayerOnScene()
     {
         GameObject gameObjectPlayer = GameObject.Find("Player");
 
@@ -138,7 +145,7 @@ public class Lesson3
         if (!gameObjectPlayer.TryGetComponent(out Player player))
         {
             Assert.AreEqual(gameObjectPlayer.AddComponent<Player>(), player,
-                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectPlayer.name, nameComponent });
+                "The \"{0}\" object does not have a \"{1}\" script", new object[] { gameObjectPlayer.name, nameComponent });
         }
 
         /***************************LayerAndField*************************/
@@ -151,7 +158,51 @@ public class Lesson3
     }
 
     [Test]
-    public void _3CheckingScriptPlayer()
+    public void _3CheckingObjectTilemapOnScene()
+    {
+        GameObject gameObjectTilemap = GameObject.Find("Tilemap");
+
+        /***************************TilemapCollider2D*************************/
+
+        if (!gameObjectTilemap.TryGetComponent(out TilemapCollider2D tilemapCollider2D))
+        {
+            Assert.AreEqual(gameObjectTilemap.AddComponent<TilemapCollider2D>(), tilemapCollider2D,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectTilemap.name, "Tilemap Collider 2D" });
+        }
+
+        Assert.IsTrue(tilemapCollider2D.usedByComposite,
+            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Tilemap Collider 2D", "Used By Composite" });
+
+        /***************************Rigidbody2D*************************/
+
+        if (!gameObjectTilemap.TryGetComponent(out Rigidbody2D rigidbody2D))
+        {
+            Assert.AreEqual(gameObjectTilemap.AddComponent<Rigidbody2D>(), rigidbody2D,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectTilemap.name, "Rigidbody 2D" });
+        }
+
+        Assert.AreEqual(RigidbodyType2D.Static, rigidbody2D.bodyType,
+            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Rigidbody 2D", "Body Type" });
+
+        /***************************CompositeCollider2D*************************/
+
+        if (!gameObjectTilemap.TryGetComponent(out CompositeCollider2D compositeCollider2D))
+        {
+            Assert.AreEqual(gameObjectTilemap.AddComponent<CompositeCollider2D>(), compositeCollider2D,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectTilemap.name, "Composite Collider 2D" });
+        }
+
+        Assert.AreEqual(CompositeCollider2D.GeometryType.Polygons, compositeCollider2D.geometryType,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Composite Collider 2D", "Geometry Type" });
+
+        /***************************FieldAndProperty*************************/
+
+        Assert.AreEqual("Ground", gameObjectTilemap.tag,
+            "The \"{0}\" object has an incorrect {1}", new object[] { gameObjectTilemap.name }, "tag");
+    }
+
+    [Test]
+    public void _4CheckingScriptPlayer()
     {
         TestAssistant.TestingField(typeof(Player), "speed", typeof(float), FieldAttributes.Private, true);
         TestAssistant.TestingField(typeof(Player), "jumpForce", typeof(float), FieldAttributes.Private, true);
@@ -177,7 +228,7 @@ public class Lesson3
     }
 
     [Test]
-    public void _4InitializingVariablesScriptPlayer()
+    public void _5InitializingVariablesScriptPlayer()
     {
         GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
         Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();

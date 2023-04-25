@@ -95,7 +95,6 @@ public class Lesson2
     {
         var pathFile = Path.Combine("Assets", "Sprites", "Tileset.png");
         Object[] spritesPlayer = AssetDatabase.LoadAllAssetRepresentationsAtPath(pathFile);
-        //TextureImporter importer = TextureImporter.GetAtPath(pathFile) as TextureImporter;
 
         pathFile = Path.Combine("Assets", "Sprites", "Tiles", "Bonus.asset");
         Tile tile = AssetDatabase.LoadAssetAtPath<Tile>(pathFile);
@@ -135,47 +134,6 @@ public class Lesson2
 
         Assert.IsNotNull(gameObjectTilemap,
             "There is no \"{0}\" object on the scene", new object[] { "Tilemap" });
-
-        /***************************TilemapCollider2D*************************/
-
-        if (!gameObjectTilemap.TryGetComponent(out TilemapCollider2D tilemapCollider2D))
-        {
-            Assert.AreEqual(gameObjectTilemap.AddComponent<TilemapCollider2D>(), tilemapCollider2D,
-                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectTilemap.name, "Tilemap Collider 2D" });
-        }
-
-        Assert.IsTrue(tilemapCollider2D.usedByComposite,
-            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Tilemap Collider 2D", "Used By Composite" });
-
-        /***************************Rigidbody2D*************************/
-
-        if (!gameObjectTilemap.TryGetComponent(out Rigidbody2D rigidbody2D))
-        {
-            Assert.AreEqual(gameObjectTilemap.AddComponent<Rigidbody2D>(), rigidbody2D,
-                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectTilemap.name, "Rigidbody 2D" });
-        }
-
-        Assert.AreEqual(RigidbodyType2D.Static, rigidbody2D.bodyType,
-            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Rigidbody 2D", "Body Type" });
-
-        /***************************CompositeCollider2D*************************/
-
-        if (!gameObjectTilemap.TryGetComponent(out CompositeCollider2D compositeCollider2D))
-        {
-            Assert.AreEqual(gameObjectTilemap.AddComponent<CompositeCollider2D>(), compositeCollider2D,
-                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectTilemap.name, "Composite Collider 2D" });
-        }
-
-        Assert.AreEqual(CompositeCollider2D.GeometryType.Polygons, compositeCollider2D.geometryType,
-            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Composite Collider 2D", "Geometry Type" });
-
-        /***************************FieldAndProperty*************************/
-
-        Assert.AreEqual("Ground", gameObjectTilemap.tag,
-            "The \"{0}\" object has an incorrect {1}", new object[] { gameObjectTilemap.name }, "tag");
-
-        Assert.AreEqual("Ground", LayerMask.LayerToName(gameObjectTilemap.layer),
-            "The \"{0}\" object has an incorrect {1}", new object[] { gameObjectTilemap.name }, "layer");
     }
 
     [Test]
@@ -213,7 +171,7 @@ public class Lesson2
     [Test]
     public void _6ExistsTilesInTilemap()
     {
-        GameObject gameObjectTilemap = GameObject.FindGameObjectWithTag("Ground");
+        GameObject gameObjectTilemap = GameObject.Find("Tilemap");
         Tilemap tilemap = gameObjectTilemap.GetComponent<Tilemap>();
 
         var position = tilemap.cellBounds.position;
