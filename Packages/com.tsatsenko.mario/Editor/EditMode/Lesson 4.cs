@@ -7,10 +7,13 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class Lesson4
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
+
     [Test]
     public void __ExistingDirectoriesAndFiles()
     {
@@ -35,31 +38,38 @@ public class Lesson4
             "The \"{0}\" directory does not have the \"{1}\" animation", new object[] { "Animations", "Idle" });
     }
 
-    //[Test]
-    //public void ExistsDirectoryAnimations()
-    //{
-    //    var pathFile = Path.Combine("Assets", "Animations");
-    //    var exists = Directory.Exists(pathFile);
-    //    Assert.IsTrue(exists,
-    //        "Not directory \"Animations\" in \"Assets\"!");
-    //}
+    [Test]
+    public void __ExistingObjectsOnScene()
+    {
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        Assert.IsNotNull(gameObjectPlayer,
+            "There is no \"{0}\" object on the scene", new object[] { "Player" });
+
+        if (!gameObjectPlayer.TryGetComponent(out Player player))
+        {
+            Assert.AreEqual(gameObjectPlayer.AddComponent<Player>(), player,
+                "The \"{0}\" object does not have a \"{1}\" scpipt", new object[] { gameObjectPlayer.name, "Player" });
+        }
+
+        if (!gameObjectPlayer.TryGetComponent(out SpriteRenderer spriteRenderer))
+        {
+            Assert.AreEqual(gameObjectPlayer.AddComponent<SpriteRenderer>(), spriteRenderer,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectPlayer.name, "SpriteRenderer" });
+        }
+    }
 
     [Test]
-    public void _1ExistsFileWalkInAnimation()
+    public void _1CheckingFileWalkInAnimation()
     {
         var pathFile = Path.Combine("Assets", "Animations", "Walk.anim");
-        //var exists = File.Exists(pathFile);
-        //Assert.IsTrue(exists,
-        //    "Not animation \"Walk\" in directory \"Animations\"!");
-
         AnimationClip animation = AssetDatabase.LoadAssetAtPath<AnimationClip>(pathFile);
+
         var propertiesAnimation = AnimationUtility.GetObjectReferenceCurveBindings(animation);
         Assert.AreEqual(1, propertiesAnimation.Length,
             "The count of properties is not equal to the \"Walk\" animation");
 
         Assert.AreEqual("Sprite", propertiesAnimation[0].propertyName[2..],
             "The name of property is not equal to the \"Walk\" animation");
-        
 
         var curveAnimation = AnimationUtility.GetObjectReferenceCurve(animation, propertiesAnimation[0]);
         Assert.AreEqual(5, curveAnimation.Length,
@@ -92,14 +102,11 @@ public class Lesson4
     }
 
     [Test]
-    public void ExistsFileIdleInAnimation()
+    public void _2CheckingFileIdleInAnimation()
     {
         var pathFile = Path.Combine("Assets", "Animations", "Idle.anim");
-        //var exists = File.Exists(pathFile);
-        //Assert.IsTrue(exists,
-        //    "Not animation \"Idle\" in directory \"Animations\"!");
-
         AnimationClip animation = AssetDatabase.LoadAssetAtPath<AnimationClip>(pathFile);
+
         var propertiesAnimation = AnimationUtility.GetCurveBindings(animation);
         Assert.AreEqual(3, propertiesAnimation.Where(p => p.propertyName.Contains("m_LocalScale")).Count(),
             "The count of properties is not equal to the \"Idle\" animation");
@@ -130,30 +137,24 @@ public class Lesson4
     }
 
     [Test]
-    public void ExistsFilePlayerInAnimation()
+    public void _3CheckingFilePlayerInAnimation()
     {
         var pathFile = Path.Combine("Assets", "Animations", "Player.controller");
-        //var exists = File.Exists(pathFile);
-        //Assert.IsTrue(exists,
-        //    "Not animator controller \"Player\" in directory \"Animations\"!");
-
         AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(pathFile);
-        var controllerLayers = controller.layers;
 
-        Assert.AreEqual(1, controllerLayers.Length,
+        var controllerLayers = controller.layers;
+                Assert.AreEqual(1, controllerLayers.Length,
             "The count of layers is not equal to the \"Player\" animator controller");
 
         var states = controller.layers[0].stateMachine.states;
-        //states.Where(s => s.state.name.Contains("Walk"))
-        Assert.IsTrue(states.Where(s => s.state.name == "Walk").Count() == 1,
+
+        var stateWalk = states.Where(s => s.state.name == "Walk").FirstOrDefault();
+        Assert.IsNotNull(stateWalk,
             "The \"Player\" animator controller not have animation \"Walk\"");
 
-        Assert.IsTrue(states.Where(s => s.state.name == "Idle").Count() == 1,
+        var stateIdle = states.Where(s => s.state.name == "Idle").FirstOrDefault();
+        Assert.IsNotNull(stateIdle,
             "The \"Player\" animator controller not have animation \"Idle\"");
-
-
-        var stateWalk = states.Where(s => s.state.name == "Walk").First();
-        var stateIdle = states.Where(s => s.state.name == "Idle").First();
 
         Assert.IsTrue(stateWalk.state.transitions.Length > 0,
             "There is no transition from the \"Walk\" animation");
@@ -217,40 +218,63 @@ public class Lesson4
     }
 
     [Test]
-    public void CheckingComponentAnimatorInObjectPlayer()
+    public void _4CheckingComponentAnimatorInObjectPlayer()
     {
-        var player = GameObject.FindGameObjectWithTag("Player");
-        var animator = player.GetComponent<Animator>();
+        var gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
 
-        if (animator == null)
+        /***************************Animator*************************/
+
+        string nameComponent = "Animator";
+
+        if (!gameObjectPlayer.TryGetComponent(out Animator animator))
         {
-            Assert.AreEqual(player.AddComponent<Animator>(), animator,
-                "The \"Player\" object does not have a Animator component");
+            Assert.AreEqual(gameObjectPlayer.AddComponent<Animator>(), animator,
+                "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectPlayer.name, nameComponent });
         }
 
         var path = Path.Combine("Assets", "Animations", "Player.controller");
         AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
         Assert.AreEqual(controller, animator.runtimeAnimatorController,
-            "The \"Player\" object does not have a controller in the \"Animator\" component");
+            "The \"{0}\" object does not have a controller in the \"{1}\" component", new object[] { gameObjectPlayer.name, nameComponent });
     }
 
     [Test]
-    public void CheckingScriptPlayer()
+    public void _5CheckingScriptPlayer()
     {
-        var player = GameObject.FindGameObjectWithTag("Player");
-        var p = player.GetComponent<Player>();
-        if (p == null)
-        {
-            Assert.AreEqual(player.AddComponent<Player>(), p,
-                "The \"Player\" object does not have a Player script");
-        }
+        Type type = typeof(Player);
+        TestAssistant.TestingField(type, "spriteRenderer", typeof(SpriteRenderer), FieldAttributes.Private);
+        TestAssistant.TestingField(type, "animator", typeof(Animator), FieldAttributes.Private);
 
-        TestAssistant.TestingFields(typeof(Player), "spriteRenderer", "SpriteRenderer", FieldAttributes.Private);
-        TestAssistant.TestingFields(typeof(Player), "animator", "Animator", FieldAttributes.Private);
+        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
+
+        TestAssistant.TestingFieldValue(type, "spriteRenderer", scriptPlayer);
+        TestAssistant.TestingFieldValue(type, "animator", scriptPlayer);
     }
 
     [Test]
-    public void CheckingTask()
+    public void _6InitializingVariablesScriptPlayer()
+    {
+        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
+
+        var methodAwake = TestAssistant.GetMethod(typeof(Player), "Awake");
+        methodAwake.Invoke(scriptPlayer, null);
+
+        SpriteRenderer fieldSpriteRenderer = TestAssistant.GetValueField(typeof(Player), "spriteRenderer", scriptPlayer) as SpriteRenderer;
+        Animator fieldAnimator = TestAssistant.GetValueField(typeof(Player), "animator", scriptPlayer) as Animator;
+
+        Assert.AreEqual(gameObjectPlayer.GetComponent<SpriteRenderer>(), fieldSpriteRenderer,
+            "The \"{0}\" method does not work correctly in the \"{1}\" class (there is no reference to the component in the \"{2}\" field)", new object[] { methodAwake.Name, scriptPlayer.name, "spriteRenderer" });
+
+        Assert.AreEqual(gameObjectPlayer.GetComponent<Animator>(), fieldAnimator,
+            "The \"{0}\" method does not work correctly in the \"{1}\" class (there is no reference to the component in the \"{2}\" field)", new object[] { methodAwake.Name, scriptPlayer.name, "animator" });
+
+        EditorSceneManager.OpenScene(pathScene);
+    }
+
+    [Test]
+    public void _7CheckingTask()
     {
         /***************************Animation****************************/
         var pathFile = Path.Combine("Assets", "Animations", "Jump.anim");
