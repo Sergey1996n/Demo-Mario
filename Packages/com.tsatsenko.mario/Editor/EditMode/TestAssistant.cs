@@ -175,7 +175,7 @@ public class TestAssistant
         return script.GetMethod(name, BINDING_FLAGS);
     }
 
-    public static void TestingMethod(Type script, string name, Type type, MethodAttributes attributes, MyParameterInfo[] parameters)
+    public static void TestingMethod(Type script, string name, Type type, MethodAttributes attributes, MyParameterInfo[] parameters = null)
     {
         var method = script.GetMethod(name, BINDING_FLAGS);
         Assert.IsNotNull(method,
