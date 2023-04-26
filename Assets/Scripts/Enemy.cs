@@ -36,12 +36,16 @@ public class Enemy : MonoBehaviour
                 SceneManager.LoadScene(0);
             }
         }
-        else if (collision.gameObject.tag != "Ground")
+        else
         {
-            direction = -direction;
-            Vector2 velocity = rigidbody2d.velocity;
-            velocity.x = direction.x * speed;
-            rigidbody2d.velocity = velocity;
+            bool changeDirection = !collision.contacts.All(c => c.point.y < transform.position.y);
+            if (changeDirection)
+            {
+                direction = -direction;
+                Vector2 velocity = rigidbody2d.velocity;
+                velocity.x = direction.x * speed;
+                rigidbody2d.velocity = velocity;
+            }
         }
     }
 }
