@@ -133,7 +133,7 @@ public class Lesson6
                 "The \"{0}\" object does not have a \"{1}\" component", new object[] { gameObjectMusic.name, nameComponent });
         }
 
-        Assert.AreEqual(Vector3.zero, transform.position,
+        Assert.AreEqual(Vector3.zero, transform.localPosition,
             "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectMusic.name, nameComponent, "Position" });
 
         /***************************AudioSource*************************/
