@@ -12,7 +12,7 @@ using UnityEngine.Tilemaps;
 
 public class Lesson3
 {
-    private string pathScene = Path.Combine("Assets", "Scenes", "SampleScene.unity");
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
 
     [Test]
     public void __ExistingDirectoriesAndFiles()

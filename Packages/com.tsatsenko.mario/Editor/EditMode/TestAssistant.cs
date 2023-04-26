@@ -126,7 +126,8 @@ public class TestAssistant
         var field = script.GetField(name, BINDING_FLAGS);
 
         Assert.AreEqual(value, field.GetValue(component),
-            $"The \"{name}\" field of the \"{component}\" component has an incorrect initial value");
+            $"The \"{name}\" field of the \"{component}\" script has an incorrect initial value");
+    }
 
     public static void TestingPropertyValue(Type script, string name, object component, object value = null)
     {
