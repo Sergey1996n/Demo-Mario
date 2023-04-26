@@ -50,17 +50,17 @@ public class Lesson5
         if (!coinObject.TryGetComponent(out Transform transform))
         {
             Assert.AreEqual(coinObject.AddComponent<Transform>(), transform,
-                "The \"{0}\" object does not have a \"{1}\" component", new object[] { coinObject.name, nameComponent });
+                "The \"{0}\" prefab does not have a \"{1}\" component", new object[] { coinObject.name, nameComponent });
         }
 
         Assert.AreEqual(Vector3.zero, transform.position,
-            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Position" });
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Position" });
 
         Assert.AreEqual(Vector3.zero, transform.rotation.eulerAngles,
-            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Rotation" });
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Rotation" });
 
         Assert.AreEqual(Vector3.one, transform.localScale,
-            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Scale" });
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Scale" });
 
         /***********************Sprite Renderer*********************/
 
@@ -106,7 +106,7 @@ public class Lesson5
     }
 
     [Test]
-    public void _2CheckingObjectCoinInScene()
+    public void _2CheckingObjectCoinOnScene()
     {
         GameObject gameObjectCoin = GameObject.Find("Coin");
         Assert.IsNotNull(gameObjectCoin,
@@ -313,6 +313,7 @@ public class Lesson5
         GameObject gameObjectScore = GameObject.Find("Score");
         Text textScore = gameObjectScore.GetComponent<Text>();
 
-        TestAssistant.TestingFieldValue(typeof(Player), "scoreText", scriptPlayer, textScore);
+        TestAssistant.TestingFieldValue(type, "scoreText", scriptPlayer, textScore);
+        TestAssistant.TestingFieldValue(type, "score", scriptPlayer, 0);
     }
 }
