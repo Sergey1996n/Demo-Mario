@@ -2,12 +2,15 @@ using NUnit.Framework;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
 [ExecuteInEditMode]
 public class Lesson2
 {
+    private string pathSceneLevel = Path.Combine("Assets", "Scenes", "Level.unity");
 
     [Test]
     public void __ExistingDirectoriesAndFiles()
@@ -66,6 +69,11 @@ public class Lesson2
         exists = File.Exists(pathFile);
         Assert.IsTrue(exists,
             "The \"{0}\" directory does not have the \"{1}\" asset", new object[] { "Tiles", "RightBush" });
+
+        if (SceneManager.GetActiveScene().name != "Level")
+        {
+            EditorSceneManager.OpenScene(pathSceneLevel);
+        }
     }
 
     [Test]
