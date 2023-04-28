@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -12,81 +11,109 @@ using UnityEngine.TestTools;
 
 public class Lesson6
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
+
     [UnitySetUp]
     public IEnumerator Setup()
     {
-        yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/SampleScene.unity", new LoadSceneParameters(LoadSceneMode.Single));
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
-    [UnityTest]
-    public IEnumerator InitializingVariablesScriptCoin()
+    [UnityTearDown]
+    public IEnumerator Tear()
     {
-        var pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
-        var objectCoin = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
-
-        GameObject gameObjectCoin = GameObject.Instantiate(objectCoin, -Vector3.one, Quaternion.identity);
-        var coin = gameObjectCoin.GetComponent<Coin>();
-
-        var typeCoin = typeof(Coin);
-        var bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
-
-        var fieldPlayer = typeCoin.GetField("player", bindingFlags);
-        var fieldAudioSource = typeCoin.GetField("audioSource", bindingFlags);
-
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
-
-        Assert.IsNotNull(gameObjectPlayer);
-
-        yield return null;
-
-        Assert.AreEqual(gameObjectPlayer, fieldPlayer.GetValue(coin),
-            $"There is no reference to the \"{gameObjectPlayer}\" object in the \"{fieldPlayer.Name}\" field!");
-
-        Assert.AreEqual(gameObjectPlayer.GetComponent<AudioSource>(), fieldAudioSource.GetValue(coin),
-            $"There is no reference to the \"{gameObjectPlayer.GetComponent<AudioSource>()}\" component in the \"{fieldAudioSource.Name}\" field!");
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
     [UnityTest]
-    public IEnumerator CheckingMethodOnTriggerEnter2DObjectCoin()
+    public IEnumerator CheckingMethodOnTriggerEnter2DObjectCoinSoundOn()
     {
         GameObject gameObjectPlayer = GameObject.Find("Player");
 
-        var pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
-        GameObject objectCoin = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
+        gameObjectPlayer.transform.position = Vector3.up * 5;
+        gameObjectPlayer.GetComponent<Rigidbody2D>().gravityScale = 0;
 
-        Assert.IsNotNull(objectCoin);
+        string pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
+        GameObject coinObject = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
 
-        var typeCoin = typeof(Coin);
-        var bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
+        GameObject gameObjectCoinTest = GameObject.Instantiate(coinObject, Vector3.up * 5, Quaternion.identity);
+        Coin scriptCoin = gameObjectCoinTest.GetComponent<Coin>();
 
-        var fieldAudioSource = typeCoin.GetField("audioSource", bindingFlags);
-        var fieldClip = typeCoin.GetField("audioClip", bindingFlags);
-        var fieldPlayer = typeCoin.GetField("player", bindingFlags);
+        yield return new WaitForFixedUpdate();
 
-        GameObject coinObjectTest = GameObject.Instantiate(objectCoin, -Vector3.one, Quaternion.identity);
-        Coin coin = coinObjectTest.GetComponent<Coin>();
+        AudioClip valueAudioClip = TestAssistant.GetValueField(typeof(Coin), "audioClip", scriptCoin) as AudioClip;
+        AudioSource valueAudioSource = TestAssistant.GetValueField(typeof(Coin), "audioSource", scriptCoin) as AudioSource;
 
-        yield return new WaitUntil(() => fieldAudioSource.GetValue(coin) != null);
-
-        AudioClip audioClip = fieldClip.GetValue(coin) as AudioClip;
-        AudioSource audioSource = fieldAudioSource.GetValue(coin) as AudioSource;
-
-        bool isSound = false;
         float[] samplesLSource = new float[1024];
 
-        gameObjectPlayer.transform.position = -Vector3.one;
+        yield return TestAssistant.WaitUntilForSeconds(() =>
+            {
+                valueAudioSource.GetOutputData(samplesLSource, 0);
+                return samplesLSource.Any(s => s != 0);
+             
+            }, 
+            valueAudioClip.length,
+            "In the \"{0}\" script, the \"{1}\" method does not start the sound", coinObject.name, "OnTriggerEnter2D");
+    }
 
-        for (float i = 0; i < audioClip.length; i += Time.deltaTime)
+    [UnityTest]
+    public IEnumerator CheckingMethodOnTriggerEnter2DObjectCoinSoundOff()
+    {
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+
+        gameObjectPlayer.transform.position = Vector3.up * 5;
+        gameObjectPlayer.GetComponent<Rigidbody2D>().gravityScale = 0;
+
+        string pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
+        GameObject coinObject = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
+
+        GameObject gameObjectCoinTest = GameObject.Instantiate(coinObject);
+        Coin scriptCoin = gameObjectCoinTest.GetComponent<Coin>();
+
+        yield return new WaitForFixedUpdate();
+
+        gameObjectPlayer.tag = "Untagged";
+        gameObjectCoinTest.transform.position = Vector3.up * 5;
+
+        yield return new WaitForFixedUpdate();
+
+        AudioClip valueAudioClip = TestAssistant.GetValueField(typeof(Coin), "audioClip", scriptCoin) as AudioClip;
+        AudioSource valueAudioSource = TestAssistant.GetValueField(typeof(Coin), "audioSource", scriptCoin) as AudioSource;
+
+        float[] samplesLSource = new float[1024];
+
+        float time = 0;
+        yield return new WaitUntil(() =>
         {
-            audioSource.GetOutputData(samplesLSource, 0);
+            valueAudioSource.GetOutputData(samplesLSource, 0);
+            if (time > valueAudioClip.length)
+            {
+                return true;
+            }
+            time += Time.deltaTime;
+            return samplesLSource.Any(s => s != 0);
+        });
 
-            isSound = samplesLSource.Any(s => s != 0);
-            if (isSound) break;
-            yield return null;
+        if (time < valueAudioClip.length)
+        {
+            Assert.Fail("In the \"{0}\" script, the \"{1}\" method does not start the sound", coinObject.name, "OnTriggerEnter2D");
         }
+    }
 
-        Assert.IsTrue(isSound,
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object does not start the sound");
-
+    [UnityTest]
+    public IEnumerator CheckingMainMusic()
+    {
+        GameObject gameObjectMusic = GameObject.Find("Music");
+        if (gameObjectMusic.TryGetComponent(out AudioSource audioSource))
+        {
+            float[] samplesLSource = new float[1024];
+            yield return TestAssistant.WaitUntilForSeconds(() =>
+                {
+                    audioSource.GetOutputData(samplesLSource, 0);
+                    return samplesLSource.Any(s => s != 0);
+                },
+                10f,
+                "The \"{0}\" object does not start music", gameObjectMusic.name);
+        }
     }
 }
