@@ -305,6 +305,7 @@ public class Lesson5
     {
         Type type = typeof(Player);
         TestAssistant.TestingField(type, "scoreText", typeof(Text), FieldAttributes.Private, true);
+        TestAssistant.TestingField(type, "score", typeof(int), FieldAttributes.Private);
 
         TestAssistant.TestingMethod(type, "AddCoin", typeof(void), MethodAttributes.Public, new MyParameterInfo[] { new MyParameterInfo(typeof(int), "count") });
 
@@ -315,5 +316,23 @@ public class Lesson5
 
         TestAssistant.TestingFieldValue(type, "scoreText", scriptPlayer, textScore);
         TestAssistant.TestingFieldValue(type, "score", scriptPlayer, 0);
+
+        scriptPlayer.AddCoin(10);
+
+        int valieFieldScore = (int)TestAssistant.GetValueField(typeof(Player), "score", scriptPlayer);
+        Assert.AreEqual(10, valieFieldScore,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field", new object[] {gameObjectPlayer.name, "AddCoin", "score"});
+
+        Assert.AreEqual("10", textScore.text,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" component in the \"{4}\" object", new object[] {gameObjectPlayer.name, "AddCoin", "text", "Text", "Score"});
+
+        scriptPlayer.AddCoin(5);
+
+        valieFieldScore = (int)TestAssistant.GetValueField(typeof(Player), "score", scriptPlayer);
+        Assert.AreEqual(15, valieFieldScore,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field", new object[] {gameObjectPlayer.name, "AddCoin", "score"});
+
+        Assert.AreEqual("15", textScore.text,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" component in the \"{4}\" object", new object[] {gameObjectPlayer.name, "AddCoin", "text", "Text", "Score"});
     }
 }
