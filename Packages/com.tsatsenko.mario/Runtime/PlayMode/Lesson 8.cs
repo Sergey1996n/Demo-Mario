@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
+using System.IO;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -10,70 +10,43 @@ using UnityEngine.TestTools;
 
 public class Lesson8
 {
-
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
     [UnitySetUp]
     public IEnumerator Setup()
     {
-        yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/SampleScene.unity", new LoadSceneParameters(LoadSceneMode.Single));
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
-    //[UnityTest]
-    //public IEnumerator _InitializingVariablesScriptPlayer()
-    //{
-    //    GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Player");
-    //    var scriptEnemy = gameObjectEnemy.GetComponent<Enemy>();
-    //    var rigidbody2dEnemy = gameObjectEnemy.GetComponent<Rigidbody2D>();
-
-    //    Rigidbody2D fieldRigidbody2d = TestAssistant.GetValueField(typeof(Enemy), "rigidbody2d", scriptEnemy) as Rigidbody2D;
-
-    //    Assert.AreEqual(rigidbody2dEnemy, fieldRigidbody2d,
-    //        $"There is no reference to the \"{rigidbody2dEnemy}\" component in the \"rigidbody2d\" field!");
-
-    //    yield return new WaitForEndOfFrame();
-
-    //    Assert.AreEqual(Vector2.left * 3, fieldRigidbody2d.velocity,
-    //        "The \"Enemy\" object in the \"Enemy\" script in the \"Start\" method has the \"rigidbody2d.velocity\" field set incorrectly");
-    //}
+    [UnityTearDown]
+    public IEnumerator Tear()
+    {
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
+    }
 
     [UnityTest]
     public IEnumerator CheckingDestroyStar()
     {
         GameObject gameObjectStar = GameObject.Find("Star");
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
 
-        gameObjectPlayer.transform.position = -Vector3.one;
-        gameObjectStar.transform.position = -Vector3.one;
+        gameObjectPlayer.transform.position = Vector3.up * 5;
+        gameObjectStar.transform.position = Vector3.up * 5;
 
-        float timeout = 1;
-        while (gameObjectStar != null && timeout > 0)
-        {
-            yield return null;
-            timeout -= Time.deltaTime;
-        }
-
-        if (gameObjectStar != null)
-        {
-            Assert.IsNull(gameObjectStar,
-                $"In the \"Starpower\" script in the \"OnTriggerEnter2D\" method, there is an incorrect interaction with the \"{gameObjectPlayer.name}\" object, since the \"{gameObjectStar.name}\" object should be destroyed");
-        }
+        yield return TestAssistant.WaitUntilForSeconds(() => gameObjectStar == null, 1,
+            $"In the \"Starpower\" script in the \"OnTriggerEnter2D\" method, there is an incorrect interaction with the \"{gameObjectPlayer.name}\" object, since the \"{gameObjectStar.name}\" object should be destroyed");
     }
 
     [UnityTest]
     public IEnumerator CheckingUndestroyStar()
     {
         GameObject gameObjectStar = GameObject.Find("Star");
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
         gameObjectPlayer.tag = "Untagged";
 
-        gameObjectPlayer.transform.position = -Vector3.one;
-        gameObjectStar.transform.position = -Vector3.one;
+        gameObjectPlayer.transform.position = Vector3.up * 5;
+        gameObjectStar.transform.position = Vector3.up * 5;
 
-        float timeout = 1;
-        while (gameObjectStar != null && timeout > 0)
-        {
-            yield return null;
-            timeout -= Time.deltaTime;
-        }
+        yield return new WaitForSeconds(1);
 
         if (gameObjectStar == null)
         {
@@ -85,7 +58,7 @@ public class Lesson8
     [UnityTest]
     public IEnumerator CheckingMethodStarPowerAnimationInClassPlayer()
     {
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
         Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
 
         var methodStarPowerAnimation = TestAssistant.GetMethod(typeof(Player), "StarPowerAnimation");
@@ -164,8 +137,8 @@ public class Lesson8
         GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
         Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
 
-        gameObjectStar.transform.position = -Vector3.one;
-        gameObjectPlayer.transform.position = -Vector3.one;
+        gameObjectStar.transform.position = Vector3.up * 5;
+        gameObjectPlayer.transform.position = Vector3.up * 5;
         yield return new WaitForFixedUpdate();
 
         DateTime now = DateTime.Now;
