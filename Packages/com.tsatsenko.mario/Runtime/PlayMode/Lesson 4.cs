@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,31 +11,45 @@ using UnityEngine.TestTools;
 
 public class Lesson4
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
+
     [UnitySetUp]
     public IEnumerator Setup()
     {
-        yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/SampleScene.unity", new LoadSceneParameters(LoadSceneMode.Single));
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
+    [UnityTearDown]
+    public IEnumerator Tear()
+    {
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
+    }
 
     [UnityTest]
-    public IEnumerator InitializingVariables()
+    public IEnumerator _1CheckingAnimatorStateObjectPlayer()
     {
-        var gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
-        var scriptPlayer = gameObjectPlayer.GetComponent<Player>();
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
+        Animator animator = gameObjectPlayer.GetComponent<Animator>();
+        
+        yield return null;
 
-        var typePlayer = typeof(Player);
-        var bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
+        var animatorClip = animator.GetCurrentAnimatorClipInfo(0);
+        Assert.AreEqual("Idle", animatorClip.First().clip.name,
+            "The \"{0}\" object has an incorrect animation by default", new object[] { gameObjectPlayer.name });
 
-        var fieldSpriteRenderer = typePlayer.GetField("spriteRenderer", bindingFlags);
-        var fieldAnimator = typePlayer.GetField("animator", bindingFlags);
+        bool fieldIsGrounded = (bool)TestAssistant.GetValueField(typeof(Player), "isGrounded", scriptPlayer);
+        MethodInfo methodJump = TestAssistant.GetMethod(typeof(Player), "Jump");
 
-        yield return new WaitForEndOfFrame();
+        if (!fieldIsGrounded)
+        {
+            yield return TestAssistant.WaitUntilForSeconds(() => (bool)TestAssistant.GetValueField(typeof(Player), "isGrounded", scriptPlayer), 10,
+                "In the \"{0}\" script, the \"{1}\" method works incorrectly", new object[] { "Player", "OnCollisionEnter2D" });
+        }
 
-        Assert.AreEqual(gameObjectPlayer.GetComponent<SpriteRenderer>(), fieldSpriteRenderer.GetValue(scriptPlayer),
-            $"There is no reference to the \"{gameObjectPlayer.GetComponent<SpriteRenderer>()}\" component in the \"{fieldSpriteRenderer.Name}\" field!");
+        methodJump.Invoke(scriptPlayer, new object[] { });
 
-        Assert.AreEqual(gameObjectPlayer.GetComponent<Animator>(), fieldAnimator.GetValue(scriptPlayer),
-            $"There is no reference to the \"{gameObjectPlayer.GetComponent<Animator>()}\" component in the \"{fieldAnimator.Name}\" field!");
+        yield return TestAssistant.WaitUntilForSeconds(() => animator.GetCurrentAnimatorStateInfo(0).IsName("Jump"), 1,
+            "The \"{0}\" object has an incorrect animation when executing the \"{1}\" method", new object[] { gameObjectPlayer.name, methodJump.Name });
     }
 }
