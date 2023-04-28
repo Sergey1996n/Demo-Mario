@@ -245,4 +245,21 @@ public class Lesson9
         Assert.AreEqual("START", textMeshProUGUI.text,
             "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectText.name, nameComponent, "Text" });
     }
+
+    [Test]
+    public void _8CheckingScenesInBuild()
+    {
+        var scnesBuild = EditorBuildSettings.scenes;
+
+        Assert.AreEqual(2, scnesBuild.Length,
+            "Incorrect number of scenes in \"Scene in Build\"");
+
+        SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scnesBuild[0].path);
+        Assert.AreEqual("StartingScene", sceneAsset.name,
+            "Incorrect name of the first scene");
+
+        sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scnesBuild[1].path);
+        Assert.AreEqual("Level", sceneAsset.name,
+            "Incorrect name of the second scene");
+    }
 }
