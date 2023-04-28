@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using UnityEditor;
@@ -7,6 +9,7 @@ using UnityEditor.PackageManager.UI;
 using UnityEditor.TestTools.TestRunner;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public class RunTestsFromMenu : ScriptableObject, ICallbacks
 {
@@ -21,13 +24,24 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         ErrorWindow.Init();
         CreateInstance<RunTestsFromMenu>().StartTestRunEditMode();
         //CreateInstance<RunTestsFromMenu>().StartTestRunPlayMode();
-        ErrorWindow.Text = numberLesson.ToString();
+        //ErrorWindow.Text = numberLesson.ToString();
     }
     private void StartTestRunEditMode()
     {
-        if (TryReadFileToMemory(out var message))
+        if (TryReadFileToMemory(out string message))
         {
-            if (int.TryParse(message, out var result))
+            string[] messages = message.Split("\n");
+
+            DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
+            string path = directoryInfo.Parent.Parent.FullName;
+
+            if (path != messages[1])
+            {
+                ErrorWindow.Text = "Вы зашли не в свой проект";
+                return;
+            }
+
+            if (int.TryParse(messages[0], out int result))
             {
                 numberLesson = result;
             }
@@ -35,7 +49,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 
         if (numberLesson == -1)
         {
-            ErrorWindow.Init();
+            //ErrorWindow.Init();
             ErrorWindow.Text = "Запустите \"Unity leaning\" для проверки тестов";
             return;
         }
@@ -52,21 +66,21 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
     }
     private void StartTestRunPlayMode()
     {
-        if (TryReadFileToMemory(out var message))
-        {
-            if (int.TryParse(message, out var result))
-            {
-                numberLesson = result;
-            }
-        }
+        //if (TryReadFileToMemory(out var message))
+        //{
+        //    if (int.TryParse(message, out var result))
+        //    {
+        //        numberLesson = result;
+        //    }
+        //}
 
-        Debug.Log("numberLesson: " + numberLesson);
-        if (numberLesson == -1)
-        {
-            ErrorWindow.Init();
-            ErrorWindow.Text = "Запустите \"Unity leaning\" для проверки тестов";
-            return;
-        }
+        //Debug.Log("numberLesson: " + numberLesson);
+        //if (numberLesson == -1)
+        //{
+        //    ErrorWindow.Init();
+        //    ErrorWindow.Text = "Запустите \"Unity leaning\" для проверки тестов";
+        //    return;
+        //}
 
         hideFlags = HideFlags.HideAndDontSave;
         mode = TestMode.PlayMode;
@@ -84,36 +98,21 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
     public void OnDisable() { CreateInstance<TestRunnerApi>().UnregisterCallbacks(this); }
     public void RunFinished(ITestResultAdaptor results)
     {
-        
-        Debug.Log(results.Output);
-        Debug.Log(results.Children.First());
-        //Debug.Log("Количество тестов: " + results.AssertCount);
-        //Debug.Log("Количество тестов: " + results.FailCount);
-        //Debug.Log("Количество тестов: " + results.InconclusiveCount);
-        //Debug.Log("Количество тестов: " + results.PassCount);
-        //Debug.Log("Количество тестов: " + results.SkipCount);
-        //Debug.Log("Количество тестов: " + numberLesson);
-
-        //if (mode == TestMode.PlayMode && results.FailCount == 0)
-        //{
-
-        //    TryWriteFileToMemory(numberLesson.ToString());
-        //}
 
         if (mode == TestMode.EditMode && results.FailCount == 0)
         {
-            //CreateInstance<RunTestsFromMenu>().StartTestRunPlayMode();
+            CreateInstance<RunTestsFromMenu>().StartTestRunPlayMode();
         }
 
-        
-        //Debug.Log(results.Name);
-        //Debug.Log(results.FullName);
-        //Debug.Log("Lesson" + (numberLesson + 1));
-        if (results.FailCount == 0)
+        if (mode == TestMode.PlayMode && results.FailCount == 0)
         {
-            
-            TryWriteFileToMemory(numberLesson.ToString());
+            DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
+            string path = directoryInfo.Parent.Parent.FullName;
+
+            string message = string.Format("{0}\n{1}", numberLesson, path);
+            TryWriteFileToMemory(message);
             ErrorWindow.Text = "<color=#00E678>Tests passed successfully!</color>";
+            SaveAssets();
         }
         DestroyImmediate(this);
 
@@ -182,6 +181,40 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         }
         catch (Exception) { }
         return false;
+    }
+
+    private void SaveAssets()
+    {
+        DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
+        string pathZip = directoryInfo.Parent.FullName + ".zip";
+        if (File.Exists(pathZip))
+        {
+            File.Delete(pathZip);
+        }
+        Debug.Log(directoryInfo.FullName);
+        Debug.Log(pathZip);
+        ZipFile.CreateFromDirectory(directoryInfo.FullName, pathZip);
+    }
+
+    [MenuItem("LearningUnity/Cancel Actions/Cancel Current Lesson")]
+    private static void CancelLesson()
+    {
+        DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
+        string pathZip = directoryInfo.Parent.FullName + ".zip";
+        Directory.Delete(Application.dataPath, true);
+        ZipFile.ExtractToDirectory(pathZip, directoryInfo.FullName);
+        AssetDatabase.Refresh();
+    }
+
+    [MenuItem("LearningUnity/Cancel Actions/Cancel Entire Course")]
+    private static void CancelCourse()
+    {
+        if (EditorUtility.DisplayDialog("Warning!",
+                "Do you really want to reset the progress of this course?", 
+                "Yes", "No"))
+        {
+            /* Позже доработать */
+        }
     }
 }
 
