@@ -15,8 +15,12 @@ public class Lesson2
     [Test]
     public void __ExistingDirectoriesAndFiles()
     {
+        var exists = Directory.Exists(pathSceneLevel);
+        Assert.IsTrue(exists,
+            "The \"{0}\" directory does not have the \"{1}\" scene", new object[] { "Scenes", "Level" });
+
         var pathDirectory = Path.Combine("Assets", "Sprites");
-        var exists = Directory.Exists(pathDirectory);
+        exists = Directory.Exists(pathDirectory);
         Assert.IsTrue(exists,
             "The \"{0}\" directory does not have the \"{1}\" directory", new object[] { "Assets" , "Sprites" });
 

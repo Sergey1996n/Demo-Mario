@@ -269,8 +269,8 @@ public class Lesson7
         Assert.AreEqual(gameObjectEnemy.GetComponent<Rigidbody2D>(), fieldRigidbody2D,
             "The \"{0}\" method does not work correctly in the \"{1}\" class (there is no reference to the component in the \"{2}\" field)", new object[] { methodAwake.Name, scriptEnemy.name, "rigidbody2d" });
 
-        methodAwake = TestAssistant.GetMethod(type, "Start");
-        methodAwake.Invoke(scriptEnemy, null);
+        var methodStart = TestAssistant.GetMethod(type, "Start");
+        methodStart.Invoke(scriptEnemy, null);
 
         Vector2 fieldDirection = (Vector2)TestAssistant.GetValueField(type, "direction", scriptEnemy);
         float fieldSpeed = (float)TestAssistant.GetValueField(type, "speed", scriptEnemy);

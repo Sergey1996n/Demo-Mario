@@ -188,7 +188,7 @@ public class Lesson6
     }
 
     [Test]
-    public void _5InitializingVariablesScriptPlayer()
+    public void _5InitializingVariablesScriptCoin()
     {
         Type type = typeof(Coin);
         GameObject gameObjectCoin = GameObject.Find("Coin");
