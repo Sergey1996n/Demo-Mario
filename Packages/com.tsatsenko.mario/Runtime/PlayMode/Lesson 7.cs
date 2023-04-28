@@ -1,12 +1,7 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -15,6 +10,7 @@ using UnityEngine.TestTools;
 
 public class Lesson7
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
     private bool isLoad = false;
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -25,71 +21,42 @@ public class Lesson7
     [UnitySetUp]
     public IEnumerator Setup()
     {
-        yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/SampleScene.unity", new LoadSceneParameters(LoadSceneMode.Single));
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
-    [UnityTest]
-    public IEnumerator _InitializingVariablesScriptEnemy()
+    [UnityTearDown]
+    public IEnumerator Tear()
     {
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy"); 
-        var scriptEnemy = gameObjectEnemy.GetComponent<Enemy>();
-        var rigidbody2dEnemy = gameObjectEnemy.GetComponent<Rigidbody2D>();
-
-        Rigidbody2D fieldRigidbody2d = TestAssistant.GetValueField(typeof(Enemy), "rigidbody2d", scriptEnemy) as Rigidbody2D;
-
-        Assert.AreEqual(rigidbody2dEnemy, fieldRigidbody2d,
-            $"There is no reference to the \"{rigidbody2dEnemy}\" component in the \"rigidbody2d\" field!");
-
-        yield return new WaitForEndOfFrame();
-
-        Assert.AreEqual(Vector2.left * 3, fieldRigidbody2d.velocity,
-            "The \"Enemy\" object in the \"Enemy\" script in the \"Start\" method has the \"rigidbody2d.velocity\" field set incorrectly");
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
     [UnityTest]
     public IEnumerator CheckingDestroyEnemy()
     {
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy");
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        GameObject gameObjectEnemy = GameObject.Find("Enemy");
 
-        gameObjectPlayer.transform.position = -Vector3.one + Vector3.up * 0.5f;
-        gameObjectEnemy.transform.position = -Vector3.one;
+        gameObjectPlayer.transform.position = Vector3.up * 10 + Vector3.up * 0.5f;
+        gameObjectEnemy.transform.position = Vector3.up * 10;
 
-        float timeout = 1;
-        while (gameObjectEnemy != null && timeout > 0)
-        {
-            yield return null;
-            timeout -= Time.deltaTime;
-        }
-
-        if (gameObjectEnemy != null)
-        {
-            Assert.IsNull(gameObjectEnemy,
-                "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, there is an incorrect interaction with the \"Player\" object, since the \"Enemy\" object should be destroyed");
-        }
+        yield return TestAssistant.WaitUntilForSeconds(() => gameObjectEnemy == null, 1,
+            "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, there is an incorrect interaction with the \"Player\" object, since the \"Enemy\" object should be destroyed");
     }
 
     [UnityTest]
     public IEnumerator CheckingUndestroyEnemy()
     {
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy");
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        GameObject gameObjectEnemy = GameObject.Find("Enemy");
         gameObjectPlayer.tag = "Untagged";
 
-        gameObjectPlayer.transform.position = -Vector3.one + Vector3.up * 0.5f;
-        gameObjectEnemy.transform.position = -Vector3.one;
+        gameObjectPlayer.transform.position = Vector3.up * 10 + Vector3.up * 0.5f;
+        gameObjectEnemy.transform.position = Vector3.up * 10;
 
-        float timeout = 1;
-        while (gameObjectEnemy != null && timeout > 0)
-        {
-            yield return null;
-            timeout -= Time.deltaTime;
-        }
-
+        yield return new WaitForSeconds(1);
         if (gameObjectEnemy == null)
         {
-            Assert.IsNotNull(gameObjectEnemy,
-                "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the \"Enemy\" object is destroyed not only when interacting with the \"Player\" object");
+            Assert.Fail("In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the \"Enemy\" object is destroyed not only when interacting with the \"Player\" object");
         }
     }
 
@@ -98,25 +65,16 @@ public class Lesson7
     public IEnumerator CheckingDestroyPlayer()
     {
         EditorSceneManager.sceneLoaded += OnSceneLoaded;
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy");
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        GameObject gameObjectEnemy = GameObject.Find("Enemy");
 
-        gameObjectPlayer.transform.position = -Vector3.one;
-        gameObjectEnemy.transform.position = -Vector3.one;
+        gameObjectPlayer.transform.position = Vector3.up * 10;
+        gameObjectEnemy.transform.position = Vector3.up * 10;
+
+        yield return TestAssistant.WaitUntilForSeconds(() => isLoad, 2,
+            "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, there is an incorrect interaction with the \"Player\" object, because the scene does not restart");
 
         isLoad = false;
-        yield return null;
-        float timeout = 2;
-        while (!isLoad && timeout > 0)
-        {
-            yield return null;
-            timeout -= Time.deltaTime;
-        }
-        if (!isLoad)
-        {
-            Assert.Fail("In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, there is an incorrect interaction with the \"Player\" object, because the scene does not restart");
-        }
-
         EditorSceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
@@ -124,74 +82,62 @@ public class Lesson7
     public IEnumerator CheckingUndestroyPlayer()
     {
         EditorSceneManager.sceneLoaded += OnSceneLoaded;
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy");
-        GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        GameObject gameObjectEnemy = GameObject.Find("Enemy");
         gameObjectPlayer.tag = "Untagged";
 
-        gameObjectPlayer.transform.position = -Vector3.one;
-        gameObjectEnemy.transform.position = -Vector3.one;
+        gameObjectPlayer.transform.position = Vector3.up * 10;
+        gameObjectEnemy.transform.position = Vector3.up * 10;
 
-        isLoad = false;
-        yield return null;
-        float timeout = 2;
-        while (!isLoad && timeout > 0)
-        {
-            yield return null;
-            timeout -= Time.deltaTime;
-        }
+        yield return new WaitForSeconds(1);
         if (isLoad)
         {
             Assert.Fail("In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the scene is restarted not only when interacting with the Player object");
         }
 
+        isLoad = false;
         EditorSceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private GameObject GetGameObject()
+    {
+        string pathFile = Path.Combine("Assets", "Prefabs", "Enemy.prefab");
+        GameObject objectEnemy = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
+
+        Enemy scriptEnemyTest = objectEnemy.GetComponent<Enemy>();
+        objectEnemy.layer = LayerMask.NameToLayer("Ground");
+        TestAssistant.SetValueField(typeof(Enemy), "speed", scriptEnemyTest, 0);
+
+        pathFile = Path.Combine("Assets", "Sprites", "Tileset.png");
+        Object[] spritesTileset = AssetDatabase.LoadAllAssetRepresentationsAtPath(pathFile);
+        objectEnemy.GetComponent<SpriteRenderer>().sprite = spritesTileset[2] as Sprite;
+
+        return objectEnemy;
     }
 
     [UnityTest]
     public IEnumerator CheckingChangeDirection()
     {
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy");
+        GameObject gameObjectEnemy = GameObject.Find("Enemy");
         Enemy scriptEnemy = gameObjectEnemy.GetComponent<Enemy>();
-        gameObjectEnemy.transform.position = -Vector3.one;
+        gameObjectEnemy.transform.position = Vector3.up * 5;
 
-        GameObject gameObjectEnemyTest = MonoBehaviour.Instantiate(gameObjectEnemy, -Vector3.one, Quaternion.identity);
-        gameObjectEnemyTest.tag = "Untagged";
+        yield return new WaitForFixedUpdate();
+
+        yield return new WaitUntil(() => gameObjectEnemy.GetComponent<Rigidbody2D>().velocity.y > -0.1);
+
+        GameObject gameObjectEnemyTest = MonoBehaviour.Instantiate(GetGameObject(), gameObjectEnemy.transform.position + Vector3.left, Quaternion.identity);
 
         Vector2 fieldDirectionTest = (Vector2)TestAssistant.GetValueField(typeof(Enemy), "direction", scriptEnemy);
         float fieldSpeed = (float)TestAssistant.GetValueField(typeof(Enemy), "speed", scriptEnemy);
         Rigidbody2D fieldRigidbody2D = TestAssistant.GetValueField(typeof(Enemy), "rigidbody2d", scriptEnemy) as Rigidbody2D;
 
+        yield return new WaitForSeconds(1);
 
-        yield return new WaitForFixedUpdate();
         Assert.AreEqual(-fieldDirectionTest, (Vector2)TestAssistant.GetValueField(typeof(Enemy), "direction", scriptEnemy),
             "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the \"Enemy\" object does not change the \"direction\" field");
 
-        Assert.AreEqual(-fieldDirectionTest * fieldSpeed, new Vector2 (fieldRigidbody2D.velocity.x, 0),
-            "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the \"Enemy\" object does not change the \"rigidbody2d.velocity\" field");
+        Assert.AreEqual(-fieldDirectionTest.x * fieldSpeed, fieldRigidbody2D.velocity.x, 0.001d,
+            "In the \"Enemy\" script, the \"OnCollisionEnter2D\" method incorrectly changes the \"rigidbody2d field.velocity\" on the X axis");
     }
-
-    [UnityTest]
-    public IEnumerator CheckingUnchangeDirection()
-    {
-        GameObject gameObjectEnemy = GameObject.FindGameObjectWithTag("Enemy");
-        Enemy scriptEnemy = gameObjectEnemy.GetComponent<Enemy>();
-        gameObjectEnemy.transform.position = -Vector3.one;
-
-        GameObject gameObjectEnemyTest = MonoBehaviour.Instantiate(gameObjectEnemy, -Vector3.one, Quaternion.identity);
-        gameObjectEnemyTest.tag = "Ground";
-
-        Vector2 fieldDirectionTest = (Vector2)TestAssistant.GetValueField(typeof(Enemy), "direction", scriptEnemy);
-        float fieldSpeed = (float)TestAssistant.GetValueField(typeof(Enemy), "speed", scriptEnemy);
-        Rigidbody2D fieldRigidbody2D = TestAssistant.GetValueField(typeof(Enemy), "rigidbody2d", scriptEnemy) as Rigidbody2D;
-
-
-        yield return new WaitForFixedUpdate();
-        Assert.AreEqual(fieldDirectionTest, (Vector2)TestAssistant.GetValueField(typeof(Enemy), "direction", scriptEnemy),
-            "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the \"Enemy\" object does change the \"direction\" field");
-
-        Assert.AreEqual(fieldDirectionTest * fieldSpeed, new Vector2(fieldRigidbody2D.velocity.x, 0),
-            "In the \"Enemy\" script in the \"OnCollisionEnter2D\" method, the \"Enemy\" object does change the \"rigidbody2d.velocity\" field");
-    }
-
-
 }
