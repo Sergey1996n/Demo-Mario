@@ -6,14 +6,19 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.SceneManagement;
 using System.IO;
-using System;
 
 public class Lesson3
 {
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
     [UnitySetUp]
     public IEnumerator Setup()
     {
-        string pathScene = Path.Combine("Assets", "Scenes", "SampleScene.unity");
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
+    }
+
+    [UnityTearDown]
+    public IEnumerator Tear()
+    {
         yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
@@ -38,6 +43,6 @@ public class Lesson3
         yield return new WaitForSeconds(0.2f);
 
         Assert.Greater(gameObjectPlayer.transform.position.y, position.y,
-            $"The \"Jump\" method does not increase the position by Y!");
+            "In the \"{0}\" script, the \"{1}\" method works incorrectly", new object[] { "Player", "Jump" });
     }
 }
