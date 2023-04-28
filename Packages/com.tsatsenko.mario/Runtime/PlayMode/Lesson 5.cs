@@ -15,127 +15,101 @@ using UnityEngine.UI;
 public class Lesson5
 {
 
+    private string pathScene = Path.Combine("Assets", "Scenes", "Level.unity");
+
     [UnitySetUp]
     public IEnumerator Setup()
     {
-        yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/SampleScene.unity", new LoadSceneParameters(LoadSceneMode.Single));
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
-    [UnityTest]
-    public IEnumerator CheckingMethodAddCoinObjectPlayer()
+    [UnityTearDown]
+    public IEnumerator Tear()
     {
-        var playerObject = GameObject.Find("Player");
-        var player = playerObject.GetComponent<Player>();
-
-
-        yield return new WaitForEndOfFrame();
-        var typePlayer = typeof(Player);
-        var bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
-
-        var fieldScore = typePlayer.GetField("score", bindingFlags);
-
-        var scoreObject = GameObject.Find("Score");
-        var text = scoreObject.GetComponent<Text>();
-
-        player.AddCoin(10);
-
-        Assert.AreEqual(10, fieldScore.GetValue(player),
-            "In the \"Player\" script, the \"AddCoin\" method incorrectly modifies the \"score\" field!");
-
-        Assert.AreEqual("10", text.text,
-            "In the \"Player\" script, the \"AddCoin\" method incorrectly changes the value of the \"text\" field of the \"Text\" component in the \"Score\" object!");
-
-        player.AddCoin(5);
-
-        Assert.AreEqual(15, fieldScore.GetValue(player),
-            "In the \"Player\" script, the \"AddCoin\" method incorrectly modifies the \"score\" field!");
-
-        Assert.AreEqual("15", text.text,
-            "In the \"Player\" script, the \"AddCoin\" method incorrectly changes the value of the \"Ttext\" field of the \"Text\" component in the \"Score\" object!");
+        yield return EditorSceneManager.LoadSceneAsyncInPlayMode(pathScene, new LoadSceneParameters(LoadSceneMode.Single));
     }
 
     [UnityTest]
     public IEnumerator CheckingMethodOnTriggerEnter2DObjectCoin()
     {
-        var playerObject = GameObject.Find("Player");
-        var player = playerObject.GetComponent<Player>();
+        GameObject gameObjectPlayer = GameObject.Find("Player");
+        Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
 
-        var pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
+        gameObjectPlayer.transform.position = Vector3.up * 5;
+        gameObjectPlayer.GetComponent<Rigidbody2D>().gravityScale = 0;
+
+        string pathFile = Path.Combine("Assets", "Prefabs", "Coin.prefab");
         GameObject coinObject = AssetDatabase.LoadAssetAtPath<GameObject>(pathFile);
 
-        GameObject coinObjectTest = GameObject.Instantiate(coinObject);
-        GameObject coinObjectTest2 = GameObject.Instantiate(coinObject);
+        GameObject gameObjectCoinTest = GameObject.Instantiate(coinObject, Vector3.up * 5, Quaternion.identity);
 
-        playerObject.transform.position = Vector3.one;
-        coinObjectTest.transform.position = Vector3.one;
-        coinObjectTest2.transform.position = -Vector3.one;
+        GameObject gameObjectScore = GameObject.Find("Score");
+        Text textScore = gameObjectScore.GetComponent<Text>();
 
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForFixedUpdate();
 
-        var typePlayer = typeof(Player);
-        var bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
+        int valieFieldScore = (int)TestAssistant.GetValueField(typeof(Player), "score", scriptPlayer);
+        Assert.AreEqual(10, valieFieldScore,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" script in the \"{4}\" object", 
+            new object[] { coinObject.name, "OnTriggerEnter2D", "score", scriptPlayer.name, gameObjectPlayer.name });
 
-        var fieldScore = typePlayer.GetField("score", bindingFlags);
+        Assert.AreEqual("10", textScore.text,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" component in the \"{4}\" object", 
+            new object[] { coinObject.name, "OnTriggerEnter2D", "text", "Text", gameObjectScore.name });
 
-        Assert.AreEqual(10, fieldScore.GetValue(player),
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object incorrectly changes the value of the \"score\" field of the \"Player\" script of the \"Player\" object");
+        yield return new WaitForFixedUpdate();
 
-        var scoreObject = GameObject.Find("Score");
-        var text = scoreObject.GetComponent<Text>();
-
-        Assert.AreEqual("10", text.text,
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object incorrectly changes the value of the \"text\" field of the \"Text\" component of the \"Score\" object");
-
-        if (coinObjectTest != null)
+        if (gameObjectCoinTest != null)
         {
-            Assert.AreEqual(null, coinObjectTest,
-                "The \"OnTriggerEnter2D\" method of the \"Coin\" object does not delete the \"Coin\" object");
-        }
-        
-        coinObjectTest2.transform.position = Vector3.one;
-
-        yield return new WaitForSeconds(.1f);
-
-        Assert.AreEqual(20, fieldScore.GetValue(player),
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object incorrectly changes the value of the \"score\" field of the \"Player\" script of the \"Player\" object");
-
-        Assert.AreEqual("20", text.text,
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object incorrectly changes the value of the \"text\" field of the \"Text\" component of the \"Score\" object");
-
-        yield return new WaitForSeconds(.1f);
-
-        if (coinObjectTest2 != null)
-        {
-            Assert.AreEqual(null, coinObjectTest2,
-                "The \"OnTriggerEnter2D\" method of the \"Coin\" object does not delete the \"Coin\" object");
+            Assert.IsNull(gameObjectCoinTest,
+                "In the \"{0}\" script, the \"{1}\" method does not destroy the {2} object", new object[] { coinObject.name, "OnTriggerEnter2D", coinObject.name });
         }
 
-        GameObject coinObjectTest3 = GameObject.Instantiate(coinObject, -Vector3.one, Quaternion.identity);
-        GameObject coinObjectTest4 = GameObject.Instantiate(coinObject, -Vector3.one, Quaternion.identity);
+        GameObject gameObjectCoinTest2 = GameObject.Instantiate(coinObject, Vector3.up * 5, Quaternion.identity);
 
-        coinObjectTest3.tag = "Untagged";
-        coinObjectTest3.AddComponent<Rigidbody2D>();
+        yield return new WaitForFixedUpdate();
 
-        yield return new WaitForSeconds(.1f);
+        valieFieldScore = (int)TestAssistant.GetValueField(typeof(Player), "score", scriptPlayer);
+        Assert.AreEqual(20, valieFieldScore,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" script in the \"{4}\" object",
+            new object[] { coinObject.name, "OnTriggerEnter2D", "score", scriptPlayer.name, gameObjectPlayer.name });
 
-        Assert.AreEqual(20, fieldScore.GetValue(player),
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object incorrectly changes the value of the \"score\" field of the \"Player\" script of the \"Player\" object");
+        Assert.AreEqual("20", textScore.text,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" component in the \"{4}\" object",
+            new object[] { coinObject.name, "OnTriggerEnter2D", "text", "Text", gameObjectScore.name });
 
-        Assert.AreEqual("20", text.text,
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object incorrectly changes the value of the \"text\" field of the \"Text\" component of the \"Score\" object");
+        yield return new WaitForFixedUpdate();
 
-        yield return new WaitForSeconds(.1f);
-
-        if (coinObjectTest3 == null)
+        if (gameObjectCoinTest2 != null)
         {
-            Assert.AreEqual(coinObject, coinObjectTest3,
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object deletes the \"Coin\" object");
+            Assert.IsNull(gameObjectCoinTest2,
+                "In the \"{0}\" script, the \"{1}\" method does not destroy the {2} object", new object[] { coinObject.name, "OnTriggerEnter2D", coinObject.name });
         }
-        
-        if (coinObjectTest4 == null)
+
+        GameObject gameObjectCoinTest3 = GameObject.Instantiate(coinObject, Vector3.up * 10, Quaternion.identity);
+
+        yield return new WaitForFixedUpdate();
+
+        gameObjectPlayer.tag = "Untagged";
+        gameObjectCoinTest3.transform.position = Vector3.up * 5;
+
+        yield return new WaitForFixedUpdate();
+
+        valieFieldScore = (int)TestAssistant.GetValueField(typeof(Player), "score", scriptPlayer);
+        Assert.AreEqual(20, valieFieldScore,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" script in the \"{4}\" object",
+            new object[] { coinObject.name, "OnTriggerEnter2D", "score", scriptPlayer.name, gameObjectPlayer.name });
+
+        Assert.AreEqual("20", textScore.text,
+            "In the \"{0}\" script, the \"{1}\" method incorrectly changes the value of the \"{2}\" field of the \"{3}\" component in the \"{4}\" object",
+            new object[] { coinObject.name, "OnTriggerEnter2D", "text", "Text", gameObjectScore.name });
+
+        yield return new WaitForFixedUpdate();
+
+        if (gameObjectCoinTest3 == null)
         {
-            Assert.AreEqual(coinObject, coinObjectTest4,
-            "The \"OnTriggerEnter2D\" method of the \"Coin\" object deletes the \"Coin\" object");
+            Assert.IsNotNull(gameObjectCoinTest3,
+                "In the \"{0}\" script, the \"{1}\" method does destroys the {2} object", new object[] { coinObject.name, "OnTriggerEnter2D", coinObject.name });
         }
     }
 }
