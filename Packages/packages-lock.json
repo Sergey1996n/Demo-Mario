@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.tsatsenko.mario": {
+    "com.tsatsenkoandpetriyanenko.mario": {
       "version": "file:com.tsatsenko.mario",
       "depth": 0,
       "source": "embedded",
