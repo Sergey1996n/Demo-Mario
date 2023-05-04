@@ -108,8 +108,14 @@ public class Lesson2
         var pathFile = Path.Combine("Assets", "Sprites", "Tileset.png");
         Object[] spritesPlayer = AssetDatabase.LoadAllAssetRepresentationsAtPath(pathFile);
 
-        pathFile = Path.Combine("Assets", "Sprites", "Tiles", "Bonus.asset");
+		pathFile = Path.Combine("Assets", "Sprites", "Tiles", "Bricks.asset");
         Tile tile = AssetDatabase.LoadAssetAtPath<Tile>(pathFile);
+        
+        Assert.AreEqual(spritesPlayer[2], tile.sprite,
+            "The \"{0}\" tile has an incorrect \"{1}\" field", new object[] { "Bricks", "Sprite" });
+
+        pathFile = Path.Combine("Assets", "Sprites", "Tiles", "Bonus.asset");
+        tile = AssetDatabase.LoadAssetAtPath<Tile>(pathFile);
         
         Assert.AreEqual(spritesPlayer[23], tile.sprite,
             "The \"{0}\" tile has an incorrect \"{1}\" field", new object[] { "Bonus", "Sprite" });
