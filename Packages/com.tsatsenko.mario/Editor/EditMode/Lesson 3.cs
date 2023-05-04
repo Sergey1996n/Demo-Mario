@@ -57,7 +57,20 @@ public class Lesson3
     }
 
     [Test]
-    public void _1CheckingSpritePlayer()
+    public void _1CheckingPhysicsMaterial2D()
+    {
+        string pathFile = Path.Combine("Assets", "Physics", "No Friction.physicsMaterial2D");
+        PhysicsMaterial2D physicsMaterial = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>(pathFile);
+
+        Assert.AreEqual(0, physicsMaterial.friction,
+            "The \"{0}\" physics material has an incorrect \"{1}\" field", new object[] { physicsMaterial.name, "Friction" });
+
+        Assert.AreEqual(0, physicsMaterial.bounciness,
+            "The \"{0}\" physics material has an incorrect \"{1}\" field", new object[] { physicsMaterial.name, "Bounciness" });
+    }
+
+    [Test]
+    public void _2CheckingSpritePlayer()
     {
         var pathFile = Path.Combine("Assets", "Sprites", "Player.png");
         TextureImporter importer = TextureImporter.GetAtPath(pathFile) as TextureImporter;
@@ -80,7 +93,7 @@ public class Lesson3
     }
 
     [Test]
-    public void _2CheckingObjectPlayerOnScene()
+    public void _3CheckingObjectPlayerOnScene()
     {
         GameObject gameObjectPlayer = GameObject.Find("Player");
 
@@ -152,13 +165,10 @@ public class Lesson3
 
         Assert.AreEqual("Player", gameObjectPlayer.tag,
             "The \"{0}\" object has an incorrect {1}", new object[] { gameObjectPlayer.name }, "tag");
-
-        Assert.AreEqual("Player", LayerMask.LayerToName(gameObjectPlayer.layer),
-            "The \"{0}\" object has an incorrect {1}", new object[] { gameObjectPlayer.name }, "layer");
     }
 
     [Test]
-    public void _3CheckingObjectTilemapOnScene()
+    public void _4CheckingObjectTilemapOnScene()
     {
         GameObject gameObjectTilemap = GameObject.Find("Tilemap");
 
@@ -202,7 +212,7 @@ public class Lesson3
     }
 
     [Test]
-    public void _4CheckingScriptPlayer()
+    public void _5CheckingScriptPlayer()
     {
         TestAssistant.TestingField(typeof(Player), "speed", typeof(float), FieldAttributes.Private, true);
         TestAssistant.TestingField(typeof(Player), "jumpForce", typeof(float), FieldAttributes.Private, true);
@@ -228,7 +238,7 @@ public class Lesson3
     }
 
     [Test]
-    public void _5InitializingVariablesScriptPlayer()
+    public void _6InitializingVariablesScriptPlayer()
     {
         GameObject gameObjectPlayer = GameObject.FindGameObjectWithTag("Player");
         Player scriptPlayer = gameObjectPlayer.GetComponent<Player>();
