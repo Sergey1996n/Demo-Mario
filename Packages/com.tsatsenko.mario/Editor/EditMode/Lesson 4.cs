@@ -108,27 +108,44 @@ public class Lesson4
         AnimationClip animation = AssetDatabase.LoadAssetAtPath<AnimationClip>(pathFile);
 
         var propertiesAnimation = AnimationUtility.GetCurveBindings(animation);
-        Assert.AreEqual(3, propertiesAnimation.Where(p => p.propertyName.Contains("m_LocalScale")).Count(),
-            "The count of properties is not equal to the \"Idle\" animation");
+        Assert.AreEqual(4, propertiesAnimation.Length,
+            "The \"Idle\" animation has an incorrect number of properties");
 
-        var curveAnimation = AnimationUtility.GetEditorCurve(animation, propertiesAnimation[1]);
-        Assert.AreEqual(3, curveAnimation.length,
-            "The count of part animation is not equal to the \"Idle\" animation");
+        var propertyScale = propertiesAnimation.Where(p => p.propertyName.Contains("m_LocalScale")).ToArray();
 
-        for (int i = 0; i < curveAnimation.keys.Length; i++)
+        Assert.IsNotNull(propertyScale,
+            "The \"Idle\" animation does not have the \"Scale\" property");
+
+        var curveAnimationScale = AnimationUtility.GetEditorCurve(animation, propertyScale[1]);
+        Assert.AreEqual(3, curveAnimationScale.length,
+            "The \"Idle\" animation in the \"Scale\" property has a different number of parts");
+
+        var propertySize = propertiesAnimation.Where(p => p.propertyName.Contains("m_Size.y")).ToArray();
+        var curveAnimationSize = AnimationUtility.GetEditorCurve(animation, propertyScale[1]);
+        Assert.AreEqual(3, curveAnimationSize.length,
+            "The \"Idle\" animation in the \"Box Collider 2D.Size.y\" property has a different number of parts");
+
+
+        for (int i = 0; i < curveAnimationScale.keys.Length; i++)
         {
-            Assert.AreEqual(i * 15, Convert.ToInt32(curveAnimation.keys[i].time * 60),
-                $"In the \"Idle\" animation, {i + 1} element has the incorrect time");
+            Assert.AreEqual(i * 15, Convert.ToInt32(curveAnimationScale.keys[i].time * 60),
+                $"The \"Idle\" animation in the \"Scale\" property, {i + 1} element has the incorrect time");
+            Assert.AreEqual(i * 15, Convert.ToInt32(curveAnimationSize.keys[i].time * 60),
+                $"The \"Idle\" animation in the \"Box Collider 2D.Size.y\" property, {i + 1} element has the incorrect time");
             switch (i)
             {
                 case 0:
                 case 2:
-                    Assert.AreEqual(1, curveAnimation.keys[i].value,
-                        $"In the \"Idle\" animation, {i + 1} element has the incorrect value");
+                    Assert.AreEqual(1, curveAnimationScale.keys[i].value,
+                        $"The \"Idle\" animation in the \"Scale\" property, {i + 1} element has the incorrect value");
+                    Assert.AreEqual(1, curveAnimationSize.keys[i].value,
+                        $"The \"Idle\" animation in the \"Box Collider 2D.Size.y\" property, {i + 1} element has the incorrect value");
                     break;
                 case 1:
-                    Assert.AreEqual(1.05f, curveAnimation.keys[i].value,
-                        $"In the \"Idle\" animation, {i + 1} element has the incorrect value");
+                    Assert.AreEqual(1.05f, curveAnimationScale.keys[i].value,
+                        $"The \"Idle\" animation in the \"Scale\" property, {i + 1} element has the incorrect value");
+                    Assert.AreEqual(0.95f, curveAnimationSize.keys[i].value,
+                        $"The \"Idle\" animation in the \"Box Collider 2D.Size.y\" property, {i + 1} element has the incorrect value");
                     break;
                 default:
                     break;
