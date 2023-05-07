@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -94,6 +95,9 @@ public class Lesson5
         Assert.AreEqual(new Vector2(0.625f, 0.878f), boxCollider2D.size,
             "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Size" });
 
+        Assert.AreEqual(new Vector2(0, -0.06f), boxCollider2D.offset,
+            "The \"{0}\" prefab in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { coinObject.name, nameComponent, "Offset" });
+
         /***************************Coin*************************/
 
         nameComponent = "Coin";
@@ -143,6 +147,9 @@ public class Lesson5
 
         Assert.AreEqual(new Vector2(0.625f, 0.878f), boxCollider2D.size,
             "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCoin.name, nameComponent, "Size" });
+
+        Assert.AreEqual(new Vector2(0, -0.06f), boxCollider2D.offset,
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectCoin.name, nameComponent, "Offset" });
 
         /***************************Coin*************************/
 
