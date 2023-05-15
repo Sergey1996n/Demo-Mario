@@ -11,10 +11,14 @@ using Debug = UnityEngine.Debug;
 
 public class RunTestsFromMenu : ScriptableObject, ICallbacks
 {
+    private const string TEXT_COMPLETE_LESSON = "Tests passed successfully!";
+    private const string TEXT_COMPLETE_PROJECT = "The whole project has been successfully completed!";
+
     private TestMode mode;
     private int numberLesson = -1;
+    private bool isAll = false;
 
-    [MenuItem("LearningUnity/Check Lesson &c")]
+    [MenuItem("LearningUnity/Check Lesson &c", false, 1)]
     private static void DoRunTests()
     {
         ErrorWindow.Init();
@@ -26,7 +30,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
     {
         if (TryReadFileToMemory(out string message))
         {
-            string[] messages = message.Split("\n");
+            string[] messages = message.Split('\n');
 
             DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
             string path = directoryInfo.Parent.Parent.FullName;
@@ -37,13 +41,18 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
                 return;
             }
 
-            if (int.TryParse(messages[0], out int result))
+            if (int.TryParse(messages[0], out int number))
             {
-                numberLesson = result;
+                numberLesson = number;
+            }
+
+            if (bool.TryParse(messages[2], out bool result))
+            {
+                isAll = result;
             }
         }
 
-        if (numberLesson == -1)
+        if (numberLesson == -1 && !isAll)
         {
             ErrorWindow.Text = "Run \"Leaning Unity\" to check the tests";
             return;
@@ -51,25 +60,53 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 
         hideFlags = HideFlags.HideAndDontSave;
         mode = TestMode.EditMode;
-        CreateInstance<TestRunnerApi>().Execute(new ExecutionSettings
-        (new Filter()
+
+        //numberLesson = 1;
+
+        Filter filter;
+
+        if (!isAll)
         {
-            testMode = TestMode.EditMode,
-            testNames = new string[] { "Lesson" + (numberLesson + 1) }
+            filter = new Filter()
+            {
+                testMode = TestMode.EditMode,
+                testNames = new string[] { "Lesson" + (numberLesson + 1) }
+            };
         }
-        ));
+        else
+        {
+            filter = new Filter()
+            {
+                testMode = TestMode.EditMode
+            };
+        }
+
+        CreateInstance<TestRunnerApi>().Execute(new ExecutionSettings(filter));
     }
     private void StartTestRunPlayMode()
     {
         hideFlags = HideFlags.HideAndDontSave;
         mode = TestMode.PlayMode;
-        CreateInstance<TestRunnerApi>().Execute(new ExecutionSettings
-        (new Filter()
+
+        Filter filter;
+
+        if (!isAll)
         {
-            testMode = TestMode.PlayMode,
-            testNames = new string[] { "Lesson" + (numberLesson + 1) }
+            filter = new Filter()
+            {
+                testMode = TestMode.PlayMode,
+                testNames = new string[] { "Lesson" + (numberLesson + 1) }
+            };
         }
-        ));
+        else
+        {
+            filter = new Filter()
+            {
+                testMode = TestMode.PlayMode
+            };
+        }
+
+        CreateInstance<TestRunnerApi>().Execute(new ExecutionSettings(filter));
     }
 
     public void OnEnable() { CreateInstance<TestRunnerApi>().RegisterCallbacks(this); }
@@ -97,7 +134,14 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
                 DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
                 string path = directoryInfo.Parent.Parent.FullName;
                 string message = string.Format("{0}\n{1}", numberLesson, path);
-                ErrorWindow.Text = "<color=#00E678>Tests passed successfully!</color>";
+                if (isAll)
+                {
+                    ErrorWindow.Text = string.Format("<color=#00E678>{0}</color>", TEXT_COMPLETE_PROJECT);
+                }
+                else
+                {
+                    ErrorWindow.Text = string.Format("<color=#00E678>Lesson {0}\n{1}</color>", numberLesson + 1, TEXT_COMPLETE_LESSON);
+                }
                 TryWriteFileToMemory(message);
                 SaveAssets();
             }
@@ -115,7 +159,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         {
             if (ErrorWindow.Text == "")
             {
-                ErrorWindow.Text = result.Message;
+                ErrorWindow.Text = string.Format("<color=red>   {0}\n{1}</color>", result.Test.Parent.Name, result.Message);
             }
         }
     }
@@ -179,7 +223,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         ZipFile.CreateFromDirectory(directoryInfo.FullName, pathZip);
     }
 
-    [MenuItem("LearningUnity/Cancel Actions/Cancel Current Lesson")]
+    [MenuItem("LearningUnity/Cancel Actions/Cancel Current Lesson", false, 1)]
     private static void CancelLesson()
     {
         DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
@@ -189,7 +233,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         AssetDatabase.Refresh();
     }
 
-    [MenuItem("LearningUnity/Cancel Actions/Cancel Entire Course")]
+    [MenuItem("LearningUnity/Cancel Actions/Cancel Entire Course", false, 2)]
     private static void CancelCourse()
     {
         if (EditorUtility.DisplayDialog("Warning!",
@@ -201,14 +245,14 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
             {
                 /********************************************************/
                 ErrorWindow.Init();
-                ErrorWindow.Text = "Запустите \"Learning Unity\"";
+                ErrorWindow.Text = "Run \"Learning Unity\"";
                 return;
             }
 
             string directory = Path.GetDirectoryName(processLeaningUnity.MainModule.FileName);
             string nameProject = Directory.GetParent(Application.dataPath).Name;
-            Debug.Log(processLeaningUnity.MainModule.FileName);
-            Debug.Log(directory);
+            //Debug.Log(processLeaningUnity.MainModule.FileName);
+            //Debug.Log(directory);
             string pathCourse = Directory.EnumerateFiles(directory, nameProject,
                 SearchOption.AllDirectories).FirstOrDefault();
 
@@ -216,7 +260,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
             {
                 /********************************************************/
                 ErrorWindow.Init();
-                ErrorWindow.Text = string.Format("Не удалось найти файл с курсом {0}", nameProject);
+                ErrorWindow.Text = string.Format("Could not find the file with the course {0}", nameProject);
                 return;
             }
 
@@ -234,11 +278,17 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
                 if (File.Exists(archiveFilePath))
                 {
                     ZipFile.ExtractToDirectory(archiveFilePath, toDir);
+                    DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
+                    string path = directoryInfo.Parent.Parent.FullName;
+                    var instance = CreateInstance<RunTestsFromMenu>();
+                    instance.TryWriteFileToMemory(string.Format("{0}\n{1}", path, true));
+                    DestroyImmediate(instance);
                 }
+
             }
-            catch (Exception e)
+            catch (Exception )
             {
-                Debug.LogError(e.ToString());
+                
             }
             finally
             {
@@ -279,7 +329,7 @@ public class ErrorWindow : EditorWindow
         myStyle.fontSize = 14;
         myStyle.normal.textColor = Color.white;
 
-
+        EditorGUILayout.Space(5f);
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
         GUILayout.Label(text, myStyle);
         EditorGUILayout.EndScrollView();
