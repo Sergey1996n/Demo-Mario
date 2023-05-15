@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -235,7 +236,16 @@ public class Lesson7
     }
 
     [Test]
-    public void _5CheckingScriptEnemy()
+    public void _5CheckingScenesInBuild()
+    {
+        var scenesBuild = EditorBuildSettings.scenes;
+
+        Assert.AreNotEqual(0, scenesBuild.Length,
+            "In \"Scene in Build\" not scenes");
+    }
+
+    [Test]
+    public void _6CheckingScriptEnemy()
     {
         Type type = typeof(Enemy);
         TestAssistant.TestingField(type, "speed", typeof(float), FieldAttributes.Private, true);
@@ -255,7 +265,7 @@ public class Lesson7
     }
 
     [Test]
-    public void _6InitializingVariablesScriptEnemy()
+    public void _7InitializingVariablesScriptEnemy()
     {
         GameObject gameObjectEnemy = GameObject.Find("Enemy");
         Enemy scriptEnemy = gameObjectEnemy.GetComponent<Enemy>();
