@@ -120,8 +120,12 @@ public class Lesson4
         Assert.AreEqual(3, curveAnimationScale.length,
             "The \"Idle\" animation in the \"Scale\" property has a different number of parts");
 
-        var propertySize = propertiesAnimation.Where(p => p.propertyName.Contains("m_Size.y")).ToArray();
-        var curveAnimationSize = AnimationUtility.GetEditorCurve(animation, propertyScale[1]);
+        var propertySize = propertiesAnimation.Where(p => p.propertyName.Contains("m_Size.y")).FirstOrDefault();
+
+        Assert.IsNotNull(propertySize,
+            "The \"Idle\" animation does not have the \"Box Collider 2D.Size.y\" property");
+
+        var curveAnimationSize = AnimationUtility.GetEditorCurve(animation, propertySize);
         Assert.AreEqual(3, curveAnimationSize.length,
             "The \"Idle\" animation in the \"Box Collider 2D.Size.y\" property has a different number of parts");
 
