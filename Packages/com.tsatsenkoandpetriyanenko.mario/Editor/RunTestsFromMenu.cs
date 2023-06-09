@@ -17,7 +17,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
     private TestMode mode;
     private int numberLesson = -1;
     // Попробовать сделать через null
-    private bool isAll = false;
+    private bool? isAll = null;
 
     [MenuItem("LearningUnity/Check Lesson &c", false, 1)]
     private static void DoRunTests()
@@ -53,7 +53,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
             }
         }
 
-        if (numberLesson == -1 && !isAll)
+        if (numberLesson == -1 || isAll == null)
         {
             ErrorWindow.TextResultTests = "Run \"Leaning Unity\" to check the tests";
             return;
@@ -63,10 +63,10 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         mode = TestMode.EditMode;
 
         //numberLesson = 1;
-
+        //isAll = false;
         Filter filter;
 
-        if (!isAll)
+        if (isAll == false)
         {
             filter = new Filter()
             {
@@ -91,7 +91,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 
         Filter filter;
 
-        if (!isAll)
+        if (isAll == false)
         {
             filter = new Filter()
             {
@@ -135,7 +135,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
                 DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
                 string path = directoryInfo.Parent.Parent.FullName;
                 string message = string.Format("{0}\n{1}", numberLesson, path);
-                if (isAll)
+                if (isAll == true)
                 {
                     ErrorWindow.TextResultTests = string.Format("<color=#00E678>{0}</color>", TEXT_COMPLETE_PROJECT);
                 }
