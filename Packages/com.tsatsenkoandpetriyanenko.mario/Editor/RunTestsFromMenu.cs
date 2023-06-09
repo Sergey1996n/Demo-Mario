@@ -16,13 +16,14 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 
     private TestMode mode;
     private int numberLesson = -1;
+    // Попробовать сделать через null
     private bool isAll = false;
 
     [MenuItem("LearningUnity/Check Lesson &c", false, 1)]
     private static void DoRunTests()
     {
-        ErrorWindow.Init();
-        ErrorWindow.Text = "";
+        ErrorWindow.InitWindow();
+        ErrorWindow.TextResultTests = "";
 
         CreateInstance<RunTestsFromMenu>().StartTestRunEditMode();
     }
@@ -37,7 +38,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 
             if (path != messages[1])
             {
-                ErrorWindow.Text = "You have opened the wrong project";
+                ErrorWindow.TextResultTests = "You have opened the wrong project";
                 return;
             }
 
@@ -54,7 +55,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 
         if (numberLesson == -1 && !isAll)
         {
-            ErrorWindow.Text = "Run \"Leaning Unity\" to check the tests";
+            ErrorWindow.TextResultTests = "Run \"Leaning Unity\" to check the tests";
             return;
         }
 
@@ -136,11 +137,11 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
                 string message = string.Format("{0}\n{1}", numberLesson, path);
                 if (isAll)
                 {
-                    ErrorWindow.Text = string.Format("<color=#00E678>{0}</color>", TEXT_COMPLETE_PROJECT);
+                    ErrorWindow.TextResultTests = string.Format("<color=#00E678>{0}</color>", TEXT_COMPLETE_PROJECT);
                 }
                 else
                 {
-                    ErrorWindow.Text = string.Format("<color=#00E678>Lesson {0}\n{1}</color>", numberLesson + 1, TEXT_COMPLETE_LESSON);
+                    ErrorWindow.TextResultTests = string.Format("<color=#00E678>Lesson {0}\n{1}</color>", numberLesson + 1, TEXT_COMPLETE_LESSON);
                 }
                 TryWriteFileToMemory(message);
                 SaveAssets();
@@ -157,9 +158,9 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
     {
         if (!result.HasChildren && result.ResultState != "Passed")
         {
-            if (ErrorWindow.Text == "")
+            if (ErrorWindow.TextResultTests == "")
             {
-                ErrorWindow.Text = string.Format("<color=red>   {0}\n{1}</color>", result.Test.Parent.Name, result.Message);
+                ErrorWindow.TextResultTests = string.Format("<color=red>   {0}\n{1}</color>", result.Test.Parent.Name, result.Message);
             }
         }
     }
@@ -171,14 +172,14 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
             char[] message;
             int size;
 
-            ErrorWindow.sharedMemory = MemoryMappedFile.OpenExisting("lesson");
+            ErrorWindow.SharedMemory = MemoryMappedFile.OpenExisting("lesson");
 
-            using (MemoryMappedViewAccessor reader = ErrorWindow.sharedMemory.CreateViewAccessor(0, 4, MemoryMappedFileAccess.Read))
+            using (MemoryMappedViewAccessor reader = ErrorWindow.SharedMemory.CreateViewAccessor(0, 4, MemoryMappedFileAccess.Read))
             {
                 size = reader.ReadInt32(0);
             }
 
-            using (MemoryMappedViewAccessor reader = ErrorWindow.sharedMemory.CreateViewAccessor(4, size * 2, MemoryMappedFileAccess.Read))
+            using (MemoryMappedViewAccessor reader = ErrorWindow.SharedMemory.CreateViewAccessor(4, size * 2, MemoryMappedFileAccess.Read))
             {
                 //Массив символов сообщения
                 message = new char[size];
@@ -200,8 +201,8 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         {
             char[] message = text.ToCharArray();
             int size = message.Length;
-            ErrorWindow.sharedMemory = MemoryMappedFile.CreateOrOpen("test", size * 2 + 4);
-            using (MemoryMappedViewAccessor writer = ErrorWindow.sharedMemory.CreateViewAccessor(0, size * 2 + 4))
+            ErrorWindow.SharedMemory = MemoryMappedFile.CreateOrOpen("test", size * 2 + 4);
+            using (MemoryMappedViewAccessor writer = ErrorWindow.SharedMemory.CreateViewAccessor(0, size * 2 + 4))
             {
                 writer.Write(0, size);
                 writer.WriteArray<char>(4, message, 0, message.Length);
@@ -232,6 +233,14 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         ZipFile.ExtractToDirectory(pathZip, directoryInfo.FullName);
         AssetDatabase.Refresh();
     }
+	
+	[MenuItem("LearningUnity/Cancel Actions/Cancel Current Lesson", true, 1)]
+    public static bool CancelLessonValidate()
+    {
+		DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
+        string pathZip = directoryInfo.Parent.FullName + ".zip";
+        return File.Exists(pathZip);
+    }
 
     [MenuItem("LearningUnity/Cancel Actions/Cancel Entire Course", false, 2)]
     private static void CancelCourse()
@@ -244,27 +253,25 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
             if (processLeaningUnity == null)
             {
                 /********************************************************/
-                ErrorWindow.Init();
-                ErrorWindow.Text = "Run \"Learning Unity\"";
+                ErrorWindow.InitWindow();
+                ErrorWindow.TextResultTests = "Run \"Learning Unity\"";
                 return;
             }
 
             string directory = Path.GetDirectoryName(processLeaningUnity.MainModule.FileName);
             string nameProject = Directory.GetParent(Application.dataPath).Name;
-            //Debug.Log(processLeaningUnity.MainModule.FileName);
-            //Debug.Log(directory);
             string pathCourse = Directory.EnumerateFiles(directory, nameProject,
                 SearchOption.AllDirectories).FirstOrDefault();
 
             if (pathCourse == null)
             {
                 /********************************************************/
-                ErrorWindow.Init();
-                ErrorWindow.Text = string.Format("Could not find the file with the course {0}", nameProject);
+                ErrorWindow.InitWindow();
+                ErrorWindow.TextResultTests = string.Format("Could not find the file with the course {0}", nameProject);
                 return;
             }
 
-            ErrorWindow.Text = "";
+            ErrorWindow.TextResultTests = "";
             AssetBundle loadedAssetBundle = null;
             try
             {
@@ -305,25 +312,27 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
 [Serializable]
 public class ErrorWindow : EditorWindow
 {
+    // По хорошему надо text разделить на несколько переменных 
+    // для лучшей визуальной настройки теста
     private static string text = "";
     private Vector2 scrollPos = Vector2.zero;
-    internal static MemoryMappedFile sharedMemory;
+    internal static MemoryMappedFile SharedMemory { get; set; }
 
-    internal static string Text
+    internal static string TextResultTests
     {
         get => text;
         set => text = value;
     }
 
-    [MenuItem("Window/General/Check Work", false, 201)]
-    internal static void Init()
+    //[MenuItem("Window/General/Check Work", false, 201)]
+    internal static void InitWindow()
     {
         EditorWindow window = GetWindow<ErrorWindow>(title: "Window Errors", desiredDockNextTo: typeof(Editor).Assembly.GetType("UnityEditor.ConsoleWindow"));
         window.Show();
         window.SaveChanges();
     }
 
-    void OnGUI()
+    private void OnGUI()
     {
         GUIStyle myStyle = new GUIStyle();
         myStyle.fontSize = 14;

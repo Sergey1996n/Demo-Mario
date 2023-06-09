@@ -171,7 +171,7 @@ public class Lesson2
         }
 
         Assert.AreEqual(-10, tilemapRenderer.sortingOrder,
-            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Tilemap Renderer", "Sorting Order" });
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Tilemap Renderer", "Sorting Order" });
     }
 
     [Test]

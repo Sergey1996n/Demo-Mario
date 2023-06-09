@@ -181,7 +181,7 @@ public class Lesson3
         }
 
         Assert.IsTrue(tilemapCollider2D.usedByComposite,
-            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Tilemap Collider 2D", "Used By Composite" });
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Tilemap Collider 2D", "Used By Composite" });
 
         /***************************Rigidbody2D*************************/
 
@@ -192,7 +192,7 @@ public class Lesson3
         }
 
         Assert.AreEqual(RigidbodyType2D.Static, rigidbody2D.bodyType,
-            $"The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Rigidbody 2D", "Body Type" });
+            "The \"{0}\" object in the \"{1}\" component has an incorrect \"{2}\" field", new object[] { gameObjectTilemap.name, "Rigidbody 2D", "Body Type" });
 
         /***************************CompositeCollider2D*************************/
 

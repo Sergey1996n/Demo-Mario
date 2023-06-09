@@ -316,10 +316,10 @@ public class Lesson4
             "The count of sprites is not equal  to the \"Jump\" animation");
 
         Assert.AreEqual(0, Convert.ToInt32(curveAnimation[0].time * 60),
-            $"In the \"Jump\" animation, {1} element has the incorrect time");
+            "In the \"Jump\" animation, 1 element has the incorrect time");
 
         Assert.AreEqual("Player_0", (curveAnimation[0].value as Sprite).name,
-            $"In the \"Jump\" animation, {1} element has the incorrect value");
+            "In the \"Jump\" animation, 1 element has the incorrect value");
 
         /***************************Controller****************************/
 

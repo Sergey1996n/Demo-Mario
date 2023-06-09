@@ -1,14 +1,18 @@
 {
-    "name": "EditModeAssembly",
+    "name": "PlayMode",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "ScriptAssembly",
-        "Unity.TextMeshPro"
+        "EditMode"
     ],
     "includePlatforms": [
-        "Editor"
+        "Editor",
+        "LinuxStandalone64",
+        "macOSStandalone",
+        "WindowsStandalone32",
+        "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
