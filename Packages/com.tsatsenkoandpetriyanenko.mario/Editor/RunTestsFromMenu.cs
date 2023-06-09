@@ -19,7 +19,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
     // Попробовать сделать через null
     private bool? isAll = null;
 
-    [MenuItem("LearningUnity/Check Lesson &c", false, 1)]
+    [MenuItem("LearningUnity/Check Lesson &c", false, -1)]
     private static void DoRunTests()
     {
         ErrorWindow.InitWindow();
@@ -234,7 +234,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         AssetDatabase.Refresh();
     }
 	
-	[MenuItem("LearningUnity/Cancel Actions/Cancel Current Lesson", true, 1)]
+	[MenuItem("LearningUnity/Cancel Actions/Cancel Current Lesson", true)]
     public static bool CancelLessonValidate()
     {
 		DirectoryInfo directoryInfo = new DirectoryInfo(Application.dataPath);
