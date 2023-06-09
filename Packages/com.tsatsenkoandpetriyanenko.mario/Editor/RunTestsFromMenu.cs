@@ -160,7 +160,7 @@ public class RunTestsFromMenu : ScriptableObject, ICallbacks
         {
             if (ErrorWindow.TextResultTests == "")
             {
-                ErrorWindow.TextResultTests = string.Format("<color=red>   {0}\n{1}</color>", result.Test.Parent.Name, result.Message);
+                ErrorWindow.TextResultTests = string.Format("<color=red>  {0}\n{1}</color>", result.Test.Parent.Name.Insert(6, " "), result.Message);
             }
         }
     }
